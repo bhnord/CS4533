@@ -4,25 +4,28 @@
 grammar WPL;
 
 // Parser rules
-compilationUnit   : cuComponent+ EOF;
+compilationUnit   : e+=cuComponent+ EOF;
 
 cuComponent       : varDeclaration | procedure | function | externDeclaration ;
 varDeclaration    : scalarDeclaration | arrayDeclaration ;
 scalarDeclaration : (t=type| VAR) scalars+=scalar (',' scalars+=scalar)* ';' ;
-scalar            : ID varInitializer? ;
+scalar            : id=ID varInitializer? ;
 arrayDeclaration  : typename=type '[' INTEGER ']' ID ';' ;       // No dynamic arrays, type not inferred
-type              : BOOL | INT | STR ;  
+type              : b=BOOL | i=INT | s=STR ;  
 varInitializer    : '<-' c=constant ;
 externDeclaration : 'extern' (externProcHeader | externFuncHeader) ';';
 
 procedure         : procHeader block ;
 procHeader        : 'proc' id=ID '(' p=params? ')' ;
 externProcHeader  : 'proc' id=ID '(' ((params ',' ELLIPSIS) | params? | ELLIPSIS?) ')' ;
-function          : funcHeader block  ;
+function          : fh=funcHeader block  ;
 funcHeader        : t=type 'func' id=ID '(' p=params? ')' ;
 externFuncHeader  : t=type 'func' id=ID '(' ((params ',' ELLIPSIS) | params? | ELLIPSIS?) ')' ;
 
-params            : (type ID (',' type ID)*) ;
+params            : (p+=param (',' p+=param)*) ;
+param		  : t=type id=ID;
+
+///
 block            : '{' (statement | varDeclaration | block)+ '}' ;   // Change to expr ???
 
 statement         : assignment
@@ -51,15 +54,15 @@ arrayIndex        : id=ID '[' expr ']' ;
 expr              : 
                   fname=ID '(' (args+=expr (',' args+=expr)*)? ')'       # FuncCallExpr
                   | arrayIndex                                            # SubscriptExpr
-                  | <assoc=right> '-' expr                                # UMinusExpr
-                  | <assoc=right> '~' expr                                # NotExpr
+                  | <assoc=right> '-' ex=expr                                # UnaryMinusExpr
+                  | <assoc=right> '~' ex=expr                                # UnaryNotExpr
                   | left=expr (MUL | DIV) right=expr                      # MultExpr
                   | left=expr (PLUS | MINUS) right=expr                   # AddExpr
                   | left=expr (LESS | LEQ | GTR | GEQ) right=expr         # RelExpr
                   | <assoc=right> left=expr (EQUAL | NEQ) right=expr      # EqExpr
                   | left=expr AND right=expr                              # AndExpr
                   | left=expr OR right=expr                               # OrExpr
-                  | '(' expr ')'                                          # ParenExpr
+                  | '(' ex = expr ')'                                          # ParenExpr
                   | arrayname=ID '.' 'length'                             # ArrayLengthExpr
                   | ID                                                    # IDExpr
                   | constant                                              # ConstExpr
@@ -81,7 +84,7 @@ DO                : 'do' ;
 SELECT            : 'select' ;
 END               : 'end' ;
 IF                : 'if' ;
-THEN              : 'then' ;
+THENN             : 'then' ;
 ELSE              : 'else' ;
 LENGTH            : 'length' ;
 

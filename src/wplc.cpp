@@ -105,11 +105,12 @@ int main(int argc, const char* argv[]) {
   //  ******************************************************************/
   // STManager *stm = new STManager();
   // PropertyManager *pm = new PropertyManager();
+  // //symbol Visitor?
   // SemanticVisitor* sv = new SemanticVisitor(stm, pm);
-  // sv->visitProgram(tree);
+  // sv->visitCompilationUnit(tree);
   // if (sv->hasErrors()) {
-  //   std::cerr << sv->getErrors() << std::endl;
-  //   return -1;
+  //  std::cerr << sv->getErrors() << std::endl;
+  //  return -1;
   // }
 
   // // Generate the LLVM IR code

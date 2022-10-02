@@ -15,6 +15,11 @@ include(platform_settings)      # Platform specific variables
 
 add_subdirectory(src bin)
 
+
+##adding tests
+add_subdirectory(test)
+
+
 set (CMAKE_INSTALL_PREFIX ${PROJECT_SOURCE_DIR})
 # install(
 #   TARGETS 
