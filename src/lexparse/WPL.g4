@@ -64,8 +64,8 @@ expr              :
                   | left=expr OR right=expr                               # OrExpr
                   | '(' ex = expr ')'                                          # ParenExpr
                   | arrayname=ID '.' 'length'                             # ArrayLengthExpr
-                  | ID                                                    # IDExpr
-                  | constant                                              # ConstExpr
+                  | id=ID                                                    # IDExpr
+                  | c=constant                                              # ConstExpr
                   ;
 
 // Lexer rules

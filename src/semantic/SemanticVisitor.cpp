@@ -57,6 +57,23 @@ std::any SemanticVisitor::visitFuncHeader(WPLParser::FuncHeaderContext *ctx){
 	if(symbol==nullptr){
 		errors.addSemanticError(ctx->getStart(), "Duplicate variable: " + id);
 	}
+	stmgr->enterScope(); //scope for parameters -- will be exited in visitFunction
+	if(ctx -> p != nullptr) {
+		for(Param *p: *params){
+			Symbol *sym = new Symbol(p->id, p->baseType);
+			Symbol *symbol = stmgr->addSymbol(sym);
+			if(symbol == nullptr){
+				errors.addSemanticError(ctx->getStart(), "Duplicate variable: " + id);
+			}
+		}
+	}
+
+	return nullptr;
+}
+
+std::any SemanticVisitor::visitFunction(WPLParser::FunctionContext *ctx){
+	visitChildren(ctx);
+	stmgr->exitScope(); // entered in the header
 	return nullptr;
 }
 
@@ -77,6 +94,17 @@ std::any SemanticVisitor::visitParam(WPLParser::ParamContext *ctx) {
 	std::string id = ctx->id->getText();
 	Param *param = new Param(id, type);
 	return param;
+}
+
+std::any SemanticVisitor::visitIDExpr(WPLParser::IDExprContext *ctx) {
+	std::string id = ctx -> id -> getText();
+	Symbol* symbol = stmgr-> findSymbol(id);
+	if(symbol != nullptr){
+		bindings -> bind(ctx, symbol);
+	} else {
+		errors.addSemanticError(ctx -> getStart(), "Use of undefined variable: " + id);
+	}
+	return nullptr;
 }
 
 
