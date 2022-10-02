@@ -7,10 +7,10 @@ std::any SemanticVisitor::visitCompilationUnit(WPLParser::CompilationUnitContext
 	for(auto ex: ctx->e){
 		ex->accept(this);
 	}
-	return SymBaseType::UNDEFINED;
+	return SymBaseType::UNDEFINED; //nullptr?
 }
 ///NEW////////////////////////////////////////////
-std::any SemanticVisitor::vistScalarDeclaration(WPLParser::ScalarDeclarationContext *ctx){
+std::any SemanticVisitor::visitScalarDeclaration(WPLParser::ScalarDeclarationContext *ctx){
 	SymBaseType type = UNDEFINED; //assume var
 	std::string id;
 
@@ -40,39 +40,37 @@ std::any SemanticVisitor::visitType(WPLParser::TypeContext *ctx) {
 std::any SemanticVisitor::visitBlock(WPLParser::BlockContext *ctx){
 	stmgr -> enterScope();
 	this ->visitChildren(ctx);
-	stmgr->exitScope();
+	stmgr-> exitScope();
 	return nullptr;
 }
 
-
-std::any SemanticVisitor::visitFuncHeader(WPLParser::FuncHeaderContext *ctx){
-	SymBaseType type = std::any_cast<SymBaseType>(ctx->t->accept(this));
-	std::string id = ctx->id->getText();
+std::any SemanticVisitor::visitFuncHeader(WPLParser::FuncHeaderContext *ctx) {
+	SymBaseType type = std::any_cast<SymBaseType>(ctx -> t -> accept(this));
+	std::string id = ctx -> id -> getText();
 	std::vector<Param*> *params = nullptr;
-	if(ctx->p != nullptr){
+	if (ctx -> p != nullptr) {
 		params = std::any_cast<std::vector<Param*>*>(ctx -> p -> accept(this));
 	}
 	Symbol *sym = new Symbol(id, type, params);
-	Symbol *symbol = stmgr->addSymbol(sym);
-	if(symbol==nullptr){
-		errors.addSemanticError(ctx->getStart(), "Duplicate variable: " + id);
+	Symbol *symbol = stmgr->addSymbol(sym); // global scope
+	if (symbol == nullptr) {
+		errors.addSemanticError(ctx -> getStart(), "Duplicate variable: " + id);
 	}
-	stmgr->enterScope(); //scope for parameters -- will be exited in visitFunction
-	if(ctx -> p != nullptr) {
-		for(Param *p: *params){
+	stmgr->enterScope(); // scope for the parameters
+	if (ctx -> p != nullptr) {
+		for (Param *p : *params) {
 			Symbol *sym = new Symbol(p->id, p->baseType);
 			Symbol *symbol = stmgr->addSymbol(sym);
-			if(symbol == nullptr){
-				errors.addSemanticError(ctx->getStart(), "Duplicate variable: " + id);
+			if (symbol == nullptr) {
+				errors.addSemanticError(ctx -> getStart(), "Duplicate variable: " + id);
 			}
 		}
 	}
-
 	return nullptr;
 }
 
 std::any SemanticVisitor::visitFunction(WPLParser::FunctionContext *ctx){
-	visitChildren(ctx);
+	this->visitChildren(ctx);
 	stmgr->exitScope(); // entered in the header
 	return nullptr;
 }
@@ -95,6 +93,8 @@ std::any SemanticVisitor::visitParam(WPLParser::ParamContext *ctx) {
 	Param *param = new Param(id, type);
 	return param;
 }
+
+
 
 std::any SemanticVisitor::visitIDExpr(WPLParser::IDExprContext *ctx) {
 	std::string id = ctx -> id -> getText();
@@ -131,16 +131,16 @@ std::any SemanticVisitor::visitIDExpr(WPLParser::IDExprContext *ctx) {
 //  return result;
 //}
 //
-///**
-// * @brief IConstExpr.type = INT
-// */
-//std::any SemanticVisitor::visitIConstExpr(WPLParser::IConstExprContext *ctx) {
-//	return SymBaseType::INT;
-//}
-//
-///**
-// * @brief booleanConstant.type = BOOL
-// */
+/**
+ * @brief IConstExpr.type = INT
+ */
+std::any SemanticVisitor::visitConstant(WPLParser::ConstantContext *ctx) {
+	return SymBaseType::INT;
+}
+
+/**
+ * @brief booleanConstant.type = BOOL
+ */
 //std::any SemanticVisitor::visitBooleanConstant(WPLParser::BooleanConstantContext *ctx) {
 //  return SymBaseType::BOOL;
 //}
@@ -150,12 +150,12 @@ std::any SemanticVisitor::visitIDExpr(WPLParser::IDExprContext *ctx) {
  * @return SymTyp::INT if no error, SymBaseType::UNDEFINED if an error.
  */
 std::any SemanticVisitor::visitUnaryMinusExpr(WPLParser::UnaryMinusExprContext *ctx) {
-  auto t = std::any_cast<SymBaseType>(ctx -> ex ->accept(this));
-  if (t != SymBaseType::INT){ // Type mismatch
-    errors.addSemanticError(ctx->getStart(), "INT expression expected, but was " + Symbol::getSymBaseTypeName(t));
-    t = SymBaseType::UNDEFINED;
-  }
-  return t;
+	auto t = std::any_cast<SymBaseType>(ctx -> ex ->accept(this));
+	if (t != SymBaseType::INT){ // Type mismatch
+		errors.addSemanticError(ctx->getStart(), "INT expression expected, but was " + Symbol::getSymBaseTypeName(t));
+		t = SymBaseType::UNDEFINED;
+	}
+	return t;
 }
 //
 //
@@ -164,12 +164,12 @@ std::any SemanticVisitor::visitUnaryMinusExpr(WPLParser::UnaryMinusExprContext *
  * @return SymTyp::BOOL if no error, SymBaseType::UNDEFINED if an error.
  */
 std::any SemanticVisitor::visitUnaryNotExpr(WPLParser::UnaryNotExprContext *ctx) {
-  auto t = std::any_cast<SymBaseType>(ctx -> ex ->accept(this));
-  if (t != SymBaseType::BOOL){ // Type mismatch
-    errors.addSemanticError(ctx->getStart(), "BOOL expression expected, but was " + Symbol::getSymBaseTypeName(t));
-    t = SymBaseType::UNDEFINED;
-  }
-  return t;
+	auto t = std::any_cast<SymBaseType>(ctx -> ex ->accept(this));
+	if (t != SymBaseType::BOOL){ // Type mismatch
+		errors.addSemanticError(ctx->getStart(), "BOOL expression expected, but was " + Symbol::getSymBaseTypeName(t));
+		t = SymBaseType::UNDEFINED;
+	}
+	return t;
 }
 //
 //
@@ -221,14 +221,14 @@ std::any SemanticVisitor::visitUnaryNotExpr(WPLParser::UnaryNotExprContext *ctx)
  * @return SymBaseType::BOOL if there are no errors or SymBaseType::UNDEFINED if there are errors.
  */
 std::any SemanticVisitor::visitEqExpr(WPLParser::EqExprContext *ctx) {
-  SymBaseType result = SymBaseType::BOOL;
-  result = std::any_cast<SymBaseType>(ctx -> right ->accept(this));
-  auto left = std::any_cast<SymBaseType>(ctx -> left ->accept(this));
-  if (result != left) {
-    errors.addSemanticError(ctx->getStart(), "Both sides of '=' must have the same type");
-    result = SymBaseType::UNDEFINED;
-  }
-  return result;
+	SymBaseType result = SymBaseType::BOOL;
+	result = std::any_cast<SymBaseType>(ctx -> right ->accept(this));
+	auto left = std::any_cast<SymBaseType>(ctx -> left ->accept(this));
+	if (result != left) {
+		errors.addSemanticError(ctx->getStart(), "Both sides of '=' must have the same type");
+		result = SymBaseType::UNDEFINED;
+	}
+	return result;
 }
 
 
@@ -236,7 +236,7 @@ std::any SemanticVisitor::visitEqExpr(WPLParser::EqExprContext *ctx) {
  * @brief ParenExpr.type = ex.type
  */
 std::any SemanticVisitor::visitParenExpr(WPLParser::ParenExprContext *ctx) {
-  return ctx->ex->accept(this);
+	return ctx->ex->accept(this);
 }
 //
 //

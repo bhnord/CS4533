@@ -16,8 +16,8 @@
 #include "antlr4-runtime.h"
 #include "WPLLexer.h"
 #include "WPLParser.h"
-// #include "CalcErrorHandler.h"
-// #include "SemanticVisitor.h"
+#include "ErrorHandler.h"
+#include "SemanticVisitor.h"
 // #include "CodegenVisitor.h"
 #include "llvm/Support/raw_ostream.h"
 #include "llvm/Support/CommandLine.h"
@@ -103,15 +103,20 @@ int main(int argc, const char* argv[]) {
   //  * and bind nodes to Symbols using the property manager. If
   //  * there are any errors we print them out and exit.
   //  ******************************************************************/
-  // STManager *stm = new STManager();
-  // PropertyManager *pm = new PropertyManager();
+  STManager *stm = new STManager();
+  PropertyManager *pm = new PropertyManager();
   // //symbol Visitor?
-  // SemanticVisitor* sv = new SemanticVisitor(stm, pm);
-  // sv->visitCompilationUnit(tree);
-  // if (sv->hasErrors()) {
-  //  std::cerr << sv->getErrors() << std::endl;
-  //  return -1;
-  // }
+  SemanticVisitor* sv = new SemanticVisitor(stm, pm);
+  sv->visitCompilationUnit(tree);
+
+////
+  std::cout <<stm->toString() <<std::endl;
+  std::cout <<"\n\n-------------------\nBINDINGS\n" << pm->toString() << std::endl;
+////
+  if (sv->hasErrors()) {
+   std::cerr << sv->getErrors() << std::endl;
+   return -1;
+  }
 
   // // Generate the LLVM IR code
   // CodegenVisitor* cv = new CodegenVisitor(pm, "WPLC.ll");
