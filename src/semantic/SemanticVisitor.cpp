@@ -32,6 +32,7 @@ std::any SemanticVisitor::visitScalarDeclaration(WPLParser::ScalarDeclarationCon
 	return nullptr;
 }	
 
+
 std::any SemanticVisitor::visitType(WPLParser::TypeContext *ctx) {
 	return ctx -> b != nullptr ? BOOL
 		:ctx -> i != nullptr ? INT : STR;
@@ -179,6 +180,8 @@ std::any SemanticVisitor::visitIDExpr(WPLParser::IDExprContext *ctx) {
 
 //assignment with left and right: var1 <- var2
 std::any SemanticVisitor::visitAssignment(WPLParser::AssignmentContext *ctx){
+	SymBaseType right = std::any_cast<SymBaseType>(ctx->e->accept(this));
+
 	SymBaseType left  = SymBaseType::UNDEFINED;
 	if(ctx -> target != nullptr){
 		std::string id = ctx -> target -> getText();
@@ -192,10 +195,11 @@ std::any SemanticVisitor::visitAssignment(WPLParser::AssignmentContext *ctx){
 	} else {
 		left = std::any_cast<SymBaseType>(ctx->arr->accept(this)); 
 	}
-	SymBaseType right = std::any_cast<SymBaseType>(ctx->e->accept(this));
+
 	if(left != right){
 		errors.addSemanticError(ctx -> getStart(), "Type mismatch on assignment: " + Symbol::getSymBaseTypeName(left) + ", " + Symbol::getSymBaseTypeName(right));
 	}
+
 	return nullptr;
 }
 
@@ -212,6 +216,7 @@ std::any SemanticVisitor::visitAndExpr(WPLParser::AndExprContext *ctx){
 	return t;
 }
 
+//or expr - boolean |
 std::any SemanticVisitor::visitOrExpr(WPLParser::OrExprContext *ctx){
 	SymBaseType t = SymBaseType::UNDEFINED;
 	SymBaseType left = std::any_cast<SymBaseType>( ctx->left->accept(this));
@@ -224,6 +229,38 @@ std::any SemanticVisitor::visitOrExpr(WPLParser::OrExprContext *ctx){
 	return t;
 }
 
+std::any SemanticVisitor::visitLoop(WPLParser::LoopContext *ctx){
+	SymBaseType t = std::any_cast<SymBaseType>(ctx->e->accept(this));
+	if(t != SymBaseType::BOOL){
+		errors.addSemanticError(ctx->getStart(), "BOOL expression expected, but was: " + Symbol::getSymBaseTypeName(t));
+	}
+	ctx->b->accept(this);
+	return nullptr;
+}
+
+
+std::any SemanticVisitor::visitConditional(WPLParser::ConditionalContext *ctx){
+	SymBaseType t = std::any_cast<SymBaseType>(ctx->e->accept(this));
+	if(t != SymBaseType::BOOL){
+		errors.addSemanticError(ctx->getStart(), "BOOL expression expected, but was: " + Symbol::getSymBaseTypeName(t));
+	}
+	for(WPLParser::BlockContext *b: ctx->b){
+		b->accept(this);
+	}
+	return nullptr;
+}	
+
+
+///MAY WANT TO VISIT IN SELECT INSTEAD OF SELECTALT?
+std::any SemanticVisitor::visitSelectAlt(WPLParser::SelectAltContext *ctx){
+	SymBaseType t  = std::any_cast<SymBaseType>(ctx->e->accept(this));
+	if(t != SymBaseType::BOOL){
+		errors.addSemanticError(ctx->getStart(), "BOOL expression expected, but was: " + Symbol::getSymBaseTypeName(t));
+	}
+	//make sure statement is ok syntactically
+	ctx->s->accept(this);
+	return t;
+}
 
 ////////////////////////////////////////////////
 
@@ -301,7 +338,7 @@ std::any SemanticVisitor::visitUnaryNotExpr(WPLParser::UnaryNotExprContext *ctx)
 // * @return SymBaseType::INT if there are no errors or SymBaseType::UNDEFINED if there are errors.
 // */
 std::any SemanticVisitor::visitMultExpr(WPLParser::MultExprContext *ctx) {
-	SymBaseType type = INT;
+	SymBaseType type = SymBaseType::INT;
 	auto left = std::any_cast<SymBaseType>(ctx -> left ->accept(this));
 	if (left != SymBaseType::INT){ // Type mismatch
 		errors.addSemanticError(ctx->getStart(), "INT left expression expected, but was " + Symbol::getSymBaseTypeName(left));
@@ -334,7 +371,7 @@ std::any SemanticVisitor::visitAddExpr(WPLParser::AddExprContext *ctx) {
 
 
 std::any SemanticVisitor::visitRelExpr(WPLParser::RelExprContext *ctx) {
-	SymBaseType type = INT;
+	SymBaseType type = SymBaseType::BOOL;
 	auto left = std::any_cast<SymBaseType>(ctx -> left ->accept(this));
 	if (left != SymBaseType::INT){ // Type mismatch
 		errors.addSemanticError(ctx->getStart(), "INT left expression expected, but was " + Symbol::getSymBaseTypeName(left));
@@ -379,9 +416,9 @@ std::any SemanticVisitor::visitRelExpr(WPLParser::RelExprContext *ctx) {
  */
 std::any SemanticVisitor::visitEqExpr(WPLParser::EqExprContext *ctx) {
 	SymBaseType result = SymBaseType::BOOL;
-	result = std::any_cast<SymBaseType>(ctx -> right ->accept(this));
-	auto left = std::any_cast<SymBaseType>(ctx -> left ->accept(this));
-	if (result != left) {
+	SymBaseType left = std::any_cast<SymBaseType>(ctx -> left ->accept(this));
+	SymBaseType right = std::any_cast<SymBaseType>(ctx -> right ->accept(this));
+	if (left != right) {
 		errors.addSemanticError(ctx->getStart(), "Both sides of '=' must have the same type");
 		result = SymBaseType::UNDEFINED;
 	}

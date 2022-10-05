@@ -31,6 +31,9 @@ class SemanticVisitor : WPLBaseVisitor {
     std::any visitAndExpr(WPLParser::AndExprContext *ctx) override;
     std::any visitOrExpr(WPLParser::OrExprContext *ctx) override;
     std::any visitArrayLengthExpr(WPLParser::ArrayLengthExprContext *ctx) override;
+    std::any visitLoop(WPLParser::LoopContext *ctx) override;
+    std::any visitConditional(WPLParser::ConditionalContext *ctx) override;
+    std::any visitSelectAlt(WPLParser::SelectAltContext *ctx) override;
 
 
     //////////////////////////

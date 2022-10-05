@@ -37,8 +37,8 @@ statement         : assignment
                   | return
                   ;
 
-loop              : 'while' e=expr 'do' block ;
-conditional       : 'if' e=expr 'then'? block ('else' block)? ;
+loop              : 'while' e=expr 'do' b=block ;
+conditional       : 'if' e=expr 'then'? b+=block ('else' b+=block)? ;
 select            : 'select' '{' selectAlt+ '}' ;
 selectAlt         : e=expr ':' s=statement ;  
 call              : id=ID '(' arguments? ')' ';' ;
