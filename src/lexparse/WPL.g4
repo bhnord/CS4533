@@ -48,7 +48,7 @@ return            : 'return' expr? ';' ;
 
 constant          : i=INTEGER | s=STRING | b=BOOLEAN ;
 assignment        : target=ID '<-' e=expr ';' 
-                  | arrayIndex '<-' e=expr ';' ;
+                  | arr=arrayIndex '<-' e=expr ';' ;
 arrayIndex        : id=ID '[' ex =expr ']' ;
 
 expr              : 

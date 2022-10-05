@@ -28,6 +28,9 @@ class SemanticVisitor : WPLBaseVisitor {
     std::any visitArrayDeclaration(WPLParser::ArrayDeclarationContext *ctx) override;
     std::any visitArrayIndex(WPLParser::ArrayIndexContext *ctx) override;
     std::any visitAssignment(WPLParser::AssignmentContext *ctx) override;
+    std::any visitAndExpr(WPLParser::AndExprContext *ctx) override;
+    std::any visitOrExpr(WPLParser::OrExprContext *ctx) override;
+    std::any visitArrayLengthExpr(WPLParser::ArrayLengthExprContext *ctx) override;
 
 
     //////////////////////////

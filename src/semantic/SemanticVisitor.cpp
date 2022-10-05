@@ -84,34 +84,62 @@ std::any SemanticVisitor::visitFunction(WPLParser::FunctionContext *ctx){
 std::any SemanticVisitor::visitArrayDeclaration(WPLParser::ArrayDeclarationContext *ctx){
 	SymBaseType t = std::any_cast<SymBaseType>(ctx -> t -> accept(this));
 	std::string id = ctx->id->getText();
-	Symbol *sym = new Symbol(id, t, 5); //stoi(ctx-> i -> getText()));
-	Symbol *symbol = stmgr->addSymbol(sym);
-	if(symbol == nullptr){
-		errors.addSemanticError(ctx->getStart(), "Duplicate variable: " + id);
-	}
+	std::string i = ctx->i->getText();
+	int len = std::stoi(ctx->i->getText());
 
+	if(len < 0){
+		errors.addSemanticError(ctx->getStart(), "Invalid array length: " + id + ", " + ctx->i->getText());
+	} else {
+		Symbol *sym = new Symbol(id, t, len);
+		Symbol *symbol = stmgr->addSymbol(sym);
+		if(symbol == nullptr){
+			errors.addSemanticError(ctx->getStart(), "Duplicate variable: " + id);
+		}
+	}
 	return nullptr;
 }
 
 
-
-//returns type of array
+// do I need length checking for arrays?
+//returns type of array array[int]
 std::any SemanticVisitor::visitArrayIndex(WPLParser::ArrayIndexContext *ctx){
 	SymBaseType e = std::any_cast<SymBaseType>(ctx -> ex -> accept(this));
+	std::string id = ctx -> id -> getText();
+
 	if(e != SymBaseType::INT){
 		errors.addSemanticError(ctx->getStart(), "INT expression expected, but was " + Symbol::getSymBaseTypeName(e));
-		return nullptr;
+	} else {
+		int i = std::stoi(ctx->ex->getText());
+		if(i <= 0){
+			errors.addSemanticError(ctx->getStart(), "Invalid array length: " + id + ", " + ctx->ex->getText());
+		}
 	}
 	//bind array
-	std::string id = ctx -> id -> getText();
 	Symbol* symbol = stmgr-> findSymbol(id);
+	SymBaseType t = SymBaseType::UNDEFINED;
 	if(symbol != nullptr){
 		bindings -> bind(ctx, symbol);
+		t = symbol->baseType;
 	} else {
 		errors.addSemanticError(ctx -> getStart(), "Use of undefined variable    : " + id);
 	}
-	return symbol->baseType;
+	return t;
 }	
+
+//array.length ----- do we need a binding here?
+std::any SemanticVisitor::visitArrayLengthExpr(WPLParser::ArrayLengthExprContext *ctx){
+	SymBaseType t = SymBaseType::UNDEFINED;
+	std::string id = ctx -> arrayname -> getText();
+	Symbol* symbol = stmgr-> findSymbol(id);
+	if(symbol != nullptr){
+		bindings -> bind(ctx, symbol);
+		t = SymBaseType::INT;
+	} else {
+		errors.addSemanticError(ctx -> getStart(), "Use of undefined variable: " + id);
+	}
+	return t;
+}
+
 
 //creates all params for func
 std::any SemanticVisitor::visitParams(WPLParser::ParamsContext *ctx){
@@ -137,33 +165,63 @@ std::any SemanticVisitor::visitParam(WPLParser::ParamContext *ctx) {
 
 // return type to ensure semantic
 std::any SemanticVisitor::visitIDExpr(WPLParser::IDExprContext *ctx) {
+	SymBaseType t = SymBaseType::UNDEFINED;
 	std::string id = ctx -> id -> getText();
 	Symbol* symbol = stmgr-> findSymbol(id);
 	if(symbol != nullptr){
 		bindings -> bind(ctx, symbol);
+		t = symbol->baseType;
 	} else {
 		errors.addSemanticError(ctx -> getStart(), "Use of undefined variable: " + id);
-		return SymBaseType::UNDEFINED;
 	}
-	return symbol->baseType;
+	return t; 
 }
 
+//assignment with left and right: var1 <- var2
 std::any SemanticVisitor::visitAssignment(WPLParser::AssignmentContext *ctx){
-	std::string id = ctx -> target -> getText();
-	Symbol* symbol = stmgr-> findSymbol(id);
-	if(symbol != nullptr){
-		bindings -> bind(ctx, symbol);
+	SymBaseType left  = SymBaseType::UNDEFINED;
+	if(ctx -> target != nullptr){
+		std::string id = ctx -> target -> getText();
+		Symbol* symbol = stmgr-> findSymbol(id);
+		if(symbol != nullptr){
+			bindings -> bind(ctx, symbol);
+			left = symbol->baseType;
+		} else {
+			errors.addSemanticError(ctx -> getStart(), "Use of undefined variable: " + id);
+		}
 	} else {
-		errors.addSemanticError(ctx -> getStart(), "Use of undefined variable: " + id);
-		return nullptr;
+		left = std::any_cast<SymBaseType>(ctx->arr->accept(this)); 
 	}
-
-	SymBaseType left = symbol->baseType;
 	SymBaseType right = std::any_cast<SymBaseType>(ctx->e->accept(this));
 	if(left != right){
 		errors.addSemanticError(ctx -> getStart(), "Type mismatch on assignment: " + Symbol::getSymBaseTypeName(left) + ", " + Symbol::getSymBaseTypeName(right));
 	}
 	return nullptr;
+}
+
+
+std::any SemanticVisitor::visitAndExpr(WPLParser::AndExprContext *ctx){
+	SymBaseType t = SymBaseType::UNDEFINED;
+	SymBaseType left = std::any_cast<SymBaseType>( ctx->left->accept(this));
+	SymBaseType right = std::any_cast<SymBaseType>(ctx->right->accept(this));
+	if(left == SymBaseType::BOOL && left == right){
+		t = SymBaseType::BOOL;
+	} else {
+		errors.addSemanticError(ctx->getStart(), "BOOL expression expected, but was: " + Symbol::getSymBaseTypeName(left) + ", " + Symbol::getSymBaseTypeName(right)); 
+	}
+	return t;
+}
+
+std::any SemanticVisitor::visitOrExpr(WPLParser::OrExprContext *ctx){
+	SymBaseType t = SymBaseType::UNDEFINED;
+	SymBaseType left = std::any_cast<SymBaseType>( ctx->left->accept(this));
+	SymBaseType right = std::any_cast<SymBaseType>(ctx->right->accept(this));
+	if(left == SymBaseType::BOOL && left == right){
+		t = SymBaseType::BOOL;
+	} else {
+		errors.addSemanticError(ctx->getStart(), "BOOL expression expected, but was: " + Symbol::getSymBaseTypeName(left) + ", " + Symbol::getSymBaseTypeName(right));
+	}
+	return t;
 }
 
 
@@ -333,6 +391,7 @@ std::any SemanticVisitor::visitEqExpr(WPLParser::EqExprContext *ctx) {
 
 /**
  * @brief ParenExpr.type = ex.type
+ * can probably get rid of this function
  */
 std::any SemanticVisitor::visitParenExpr(WPLParser::ParenExprContext *ctx) {
 	return ctx->ex->accept(this);
