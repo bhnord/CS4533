@@ -6,7 +6,7 @@
 #include "SemanticVisitor.h"
 
 TEST_CASE("Development tests", "[semantic]") {
-  antlr4::ANTLRInputStream input( "1 < 4 = 3 = 2 = 4 > 3; a <- (6+4)sdf;sdl 13;z ## 02");
+  antlr4::ANTLRInputStream input( "1 < 4 = 3 = 2 = 4 > 3;");
   WPLLexer lexer(&input);
   antlr4::CommonTokenStream tokens(&lexer);
   WPLParser parser(&tokens);
@@ -14,7 +14,6 @@ TEST_CASE("Development tests", "[semantic]") {
   WPLParser::CompilationUnitContext* tree = NULL;
   REQUIRE_NOTHROW(tree = parser.compilationUnit());
   REQUIRE(tree != NULL);
-  CHECK(false);
   SemanticVisitor* sv = new SemanticVisitor(new STManager(), new PropertyManager());  // NEW
   sv->visitCompilationUnit(tree); // NEW
   // Error checking is NEW

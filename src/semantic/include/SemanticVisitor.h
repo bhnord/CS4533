@@ -22,12 +22,17 @@ class SemanticVisitor : WPLBaseVisitor {
     std::any visitParams(WPLParser::ParamsContext *ctx) override;
     std::any visitParam(WPLParser::ParamContext *ctx) override;
     std::any visitIDExpr(WPLParser::IDExprContext *ctx) override;
-
+    std::any visitMultExpr(WPLParser::MultExprContext *ctx) override;
+    std::any visitAddExpr(WPLParser::AddExprContext *ctx) override;
+    std::any visitRelExpr(WPLParser::RelExprContext *ctx) override;
+    std::any visitArrayDeclaration(WPLParser::ArrayDeclarationContext *ctx) override;
+    std::any visitArrayIndex(WPLParser::ArrayIndexContext *ctx) override;
+    std::any visitAssignment(WPLParser::AssignmentContext *ctx) override;
 
 
     //////////////////////////
     //std::any visitCompilationUnit(WPLParser::ProgramContext *ctx);
-    //std::any visitBooleanConstant(WPLParser::BooleanConstantContext *ctx);
+    //std::any visitBoolean(WPLParser::BooleanContext *ctx);
     std::any visitConstant(WPLParser::ConstantContext *ctx) override;
     std::any visitParenExpr(WPLParser::ParenExprContext *ctx) override;
     std::any visitUnaryMinusExpr(WPLParser::UnaryMinusExprContext *ctx) override;

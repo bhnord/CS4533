@@ -10,7 +10,7 @@ cuComponent       : varDeclaration | procedure | function | externDeclaration ;
 varDeclaration    : scalarDeclaration | arrayDeclaration ;
 scalarDeclaration : (t=type| VAR) scalars+=scalar (',' scalars+=scalar)* ';' ;
 scalar            : id=ID varInitializer? ;
-arrayDeclaration  : typename=type '[' INTEGER ']' ID ';' ;       // No dynamic arrays, type not inferred
+arrayDeclaration  : t=type '[' i=INTEGER ']' id=ID ';' ;       // No dynamic arrays, type not inferred
 type              : b=BOOL | i=INT | s=STR ;  
 varInitializer    : '<-' c=constant ;
 externDeclaration : 'extern' (externProcHeader | externFuncHeader) ';';
@@ -46,10 +46,10 @@ arguments         : (arg (',' arg)*) ;
 arg               : (id=ID | c=constant) ; 
 return            : 'return' expr? ';' ;
 
-constant          : INTEGER | STRING | BOOLEAN ;
+constant          : i=INTEGER | s=STRING | b=BOOLEAN ;
 assignment        : target=ID '<-' e=expr ';' 
                   | arrayIndex '<-' e=expr ';' ;
-arrayIndex        : id=ID '[' expr ']' ;
+arrayIndex        : id=ID '[' ex =expr ']' ;
 
 expr              : 
                   fname=ID '(' (args+=expr (',' args+=expr)*)? ')'       # FuncCallExpr
@@ -119,7 +119,7 @@ RBRACE					  :	'}' ;
 
 // Literals, identifiers, and whitespace
 WS 						    :	[ \t\r\n\f]+ -> skip ;
-INTEGER					  :	DIGIT+ ;
+INTEGER					  :	'-'? DIGIT+ ;
 BOOLEAN           : 'true' | 'false' ;
 ID      				  : LETTER (LETTER|DIGIT|UNDERSCORE)* ;
 STRING			      : '"' ('\\'. | ~[\n])*? '"' ;

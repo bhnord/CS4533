@@ -75,6 +75,45 @@ std::any SemanticVisitor::visitFunction(WPLParser::FunctionContext *ctx){
 	return nullptr;
 }
 
+//std::any SemanticVisitor::visitFucnCallExpr(WPLParser::FuncCallExprContext *ctx){
+//	//find fname in linked
+//	Symbol* symbol = stmgr->findSymbol(ctx->fname->getText());
+//	//check variables with func definition
+//
+//}
+std::any SemanticVisitor::visitArrayDeclaration(WPLParser::ArrayDeclarationContext *ctx){
+	SymBaseType t = std::any_cast<SymBaseType>(ctx -> t -> accept(this));
+	std::string id = ctx->id->getText();
+	Symbol *sym = new Symbol(id, t, 5); //stoi(ctx-> i -> getText()));
+	Symbol *symbol = stmgr->addSymbol(sym);
+	if(symbol == nullptr){
+		errors.addSemanticError(ctx->getStart(), "Duplicate variable: " + id);
+	}
+
+	return nullptr;
+}
+
+
+
+//returns type of array
+std::any SemanticVisitor::visitArrayIndex(WPLParser::ArrayIndexContext *ctx){
+	SymBaseType e = std::any_cast<SymBaseType>(ctx -> ex -> accept(this));
+	if(e != SymBaseType::INT){
+		errors.addSemanticError(ctx->getStart(), "INT expression expected, but was " + Symbol::getSymBaseTypeName(e));
+		return nullptr;
+	}
+	//bind array
+	std::string id = ctx -> id -> getText();
+	Symbol* symbol = stmgr-> findSymbol(id);
+	if(symbol != nullptr){
+		bindings -> bind(ctx, symbol);
+	} else {
+		errors.addSemanticError(ctx -> getStart(), "Use of undefined variable    : " + id);
+	}
+	return symbol->baseType;
+}	
+
+//creates all params for func
 std::any SemanticVisitor::visitParams(WPLParser::ParamsContext *ctx){
 	std::vector<Param*> *params = new std::vector<Param*>;
 
@@ -87,6 +126,7 @@ std::any SemanticVisitor::visitParams(WPLParser::ParamsContext *ctx){
 	return params;
 }
 
+//return param to add to func
 std::any SemanticVisitor::visitParam(WPLParser::ParamContext *ctx) {
 	SymBaseType type = std::any_cast<SymBaseType>(ctx -> t -> accept(this));
 	std::string id = ctx->id->getText();
@@ -95,7 +135,7 @@ std::any SemanticVisitor::visitParam(WPLParser::ParamContext *ctx) {
 }
 
 
-
+// return type to ensure semantic
 std::any SemanticVisitor::visitIDExpr(WPLParser::IDExprContext *ctx) {
 	std::string id = ctx -> id -> getText();
 	Symbol* symbol = stmgr-> findSymbol(id);
@@ -103,10 +143,28 @@ std::any SemanticVisitor::visitIDExpr(WPLParser::IDExprContext *ctx) {
 		bindings -> bind(ctx, symbol);
 	} else {
 		errors.addSemanticError(ctx -> getStart(), "Use of undefined variable: " + id);
+		return SymBaseType::UNDEFINED;
+	}
+	return symbol->baseType;
+}
+
+std::any SemanticVisitor::visitAssignment(WPLParser::AssignmentContext *ctx){
+	std::string id = ctx -> target -> getText();
+	Symbol* symbol = stmgr-> findSymbol(id);
+	if(symbol != nullptr){
+		bindings -> bind(ctx, symbol);
+	} else {
+		errors.addSemanticError(ctx -> getStart(), "Use of undefined variable: " + id);
+		return nullptr;
+	}
+
+	SymBaseType left = symbol->baseType;
+	SymBaseType right = std::any_cast<SymBaseType>(ctx->e->accept(this));
+	if(left != right){
+		errors.addSemanticError(ctx -> getStart(), "Type mismatch on assignment: " + Symbol::getSymBaseTypeName(left) + ", " + Symbol::getSymBaseTypeName(right));
 	}
 	return nullptr;
 }
-
 
 
 ////////////////////////////////////////////////
@@ -132,16 +190,22 @@ std::any SemanticVisitor::visitIDExpr(WPLParser::IDExprContext *ctx) {
 //}
 //
 /**
- * @brief IConstExpr.type = INT
+ * @brief Constant.type = INT, STR, BOOL
  */
 std::any SemanticVisitor::visitConstant(WPLParser::ConstantContext *ctx) {
-	return SymBaseType::INT;
+	if(ctx->i != nullptr){
+		return SymBaseType::INT;
+	} else if(ctx->s != nullptr){
+		return SymBaseType::STR;
+	} else {
+		return SymBaseType::BOOL;
+	}
 }
 
 /**
  * @brief booleanConstant.type = BOOL
  */
-//std::any SemanticVisitor::visitBooleanConstant(WPLParser::BooleanConstantContext *ctx) {
+//std::any SemanticVisitor::visitBoolean(WPLParser::BooleanContext *ctx) {
 //  return SymBaseType::BOOL;
 //}
 //
@@ -178,20 +242,55 @@ std::any SemanticVisitor::visitUnaryNotExpr(WPLParser::UnaryNotExprContext *ctx)
 // *
 // * @return SymBaseType::INT if there are no errors or SymBaseType::UNDEFINED if there are errors.
 // */
-// std::any SemanticVisitor::visitBinaryArithExpr(WPLParser::BinaryArithExprContext *ctx) {
-//   SymBaseType type = INT;
-//   auto left = std::any_cast<SymBaseType>(ctx -> left ->accept(this));
-//   if (left != SymBaseType::INT){ // Type mismatch
-//     errors.addSemanticError(ctx->getStart(), "INT left expression expected, but was " + Symbol::getSymBaseTypeName(left));
-//     type = SymBaseType::UNDEFINED;;
-//   }
-//   auto right = std::any_cast<SymBaseType>(ctx -> right ->accept(this));
-//   if (right != SymBaseType::INT){ // Type mismatch
-//     errors.addSemanticError(ctx->getStart(), "INT right expression expected, but was " + Symbol::getSymBaseTypeName(right));
-//     type = SymBaseType::UNDEFINED;
-//   }
-//   return type;
-// }
+std::any SemanticVisitor::visitMultExpr(WPLParser::MultExprContext *ctx) {
+	SymBaseType type = INT;
+	auto left = std::any_cast<SymBaseType>(ctx -> left ->accept(this));
+	if (left != SymBaseType::INT){ // Type mismatch
+		errors.addSemanticError(ctx->getStart(), "INT left expression expected, but was " + Symbol::getSymBaseTypeName(left));
+		type = SymBaseType::UNDEFINED;;
+	}
+	auto right = std::any_cast<SymBaseType>(ctx -> right ->accept(this));
+	if (right != SymBaseType::INT){ // Type mismatch
+		errors.addSemanticError(ctx->getStart(), "INT right expression expected, but was " + Symbol::getSymBaseTypeName(right));
+		type = SymBaseType::UNDEFINED;
+	}
+	return type;
+}
+
+
+
+std::any SemanticVisitor::visitAddExpr(WPLParser::AddExprContext *ctx) {
+	SymBaseType type = INT;
+	auto left = std::any_cast<SymBaseType>(ctx -> left ->accept(this));
+	if (left != SymBaseType::INT){ // Type mismatch
+		errors.addSemanticError(ctx->getStart(), "INT left expression expected, but was " + Symbol::getSymBaseTypeName(left));
+		type = SymBaseType::UNDEFINED;;
+	}
+	auto right = std::any_cast<SymBaseType>(ctx -> right ->accept(this));
+	if (right != SymBaseType::INT){ // Type mismatch
+		errors.addSemanticError(ctx->getStart(), "INT right expression expected, but was " + Symbol::getSymBaseTypeName(right));
+		type = SymBaseType::UNDEFINED;
+	}
+	return type;
+}
+
+
+std::any SemanticVisitor::visitRelExpr(WPLParser::RelExprContext *ctx) {
+	SymBaseType type = INT;
+	auto left = std::any_cast<SymBaseType>(ctx -> left ->accept(this));
+	if (left != SymBaseType::INT){ // Type mismatch
+		errors.addSemanticError(ctx->getStart(), "INT left expression expected, but was " + Symbol::getSymBaseTypeName(left));
+		type = SymBaseType::UNDEFINED;;
+	}
+	auto right = std::any_cast<SymBaseType>(ctx -> right ->accept(this));
+	if (right != SymBaseType::INT){ // Type mismatch
+		errors.addSemanticError(ctx->getStart(), "INT right expression expected, but was " + Symbol::getSymBaseTypeName(right));
+		type = SymBaseType::UNDEFINED;
+	}
+	return type;
+}
+
+
 //
 //
 ///**

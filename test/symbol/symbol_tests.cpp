@@ -6,5 +6,5 @@ TEST_CASE("Create a Symbol", "[symbol]") {
   CHECK(s.id== "a");
   CHECK(s.baseType == BOOL);
   //CHECK("foo" == s.toString());
-  CHECK("[a, BOOL]" == s.toString());
+  CHECK("[a: BOOL]" == s.toString());
 }
