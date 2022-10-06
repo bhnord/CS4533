@@ -1,0 +1,58 @@
+ParenExpr + 
+UnaryMinus +
+UnaryNot +
+EqExpr+
+multExpr
+addExpr, relExpr
+IdExpr
+SubscirptExpr --> do in arrayIndex
+AndExpr
+ID Expr
+OrExpr
+ArrayLengthExpr
+ConstantExpr
+visitArrayDeclaration
+arrayIndex 			<-- do you need to check length
+loop
+conditional
+
+selectAlt <-- select done in here
+
+need: --------------------------------------------------------
+FuncCallExpr **  --->> is this just the call expression
+
+externProcHeader, externFuncHeader
+procHeader (basically just copy function) <-- check this
+proc (exit scope of procheader)
+
+call
+arg
+
+
+
+
+do not need-----------
+cuComponent
+varDeclaration
+varInitializer
+arguments
+return
+visitScalar <--- done in visitScalarDeclaration
+
+
+
+create bindings in assignment, declaration, 
+
+
+call is just a rule for recognizing an id and set of arguments -- statment
+x(1,2); -- does not return anything
+-- should not accept expressions
+
+
+PROBLEM WITH NEGATIVE NUMBERS --> extraneous input when you are trying to set a number negative initially
+	tried to add '-' to integer -- change if needed
+
+
+
+how to handle ors in grammar
+----> find in latest office hours --> watch video

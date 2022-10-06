@@ -67,13 +67,37 @@ std::any SemanticVisitor::visitFuncHeader(WPLParser::FuncHeaderContext *ctx) {
 			}
 		}
 	}
-	return nullptr;
+	return type;
 }
 
 std::any SemanticVisitor::visitFunction(WPLParser::FunctionContext *ctx){
 	this->visitChildren(ctx);
 	stmgr->exitScope(); // entered in the header
 	return nullptr;
+}
+
+std::any SemanticVisitor::visitProcHeader(WPLParser::ProcHeaderContext *ctx){
+        std::string id = ctx -> id -> getText();
+        std::vector<Param*> *params = nullptr;
+        if (ctx -> p != nullptr) {
+                params = std::any_cast<std::vector<Param*>*>(ctx -> p -> accept(this));
+        }
+        Symbol *sym = new Symbol(id, params);
+        Symbol *symbol = stmgr->addSymbol(sym); // global scope
+        if (symbol == nullptr) {
+                errors.addSemanticError(ctx -> getStart(), "Duplicate variable: " + id);
+        }
+        stmgr->enterScope(); // scope for the parameters
+        if (ctx -> p != nullptr) {
+                for (Param *p : *params) {
+                        Symbol *sym = new Symbol(p->id, p->baseType);
+                        Symbol *symbol = stmgr->addSymbol(sym);
+                        if (symbol == nullptr) {
+                                errors.addSemanticError(ctx -> getStart(), "Duplicate variable: " + id);
+                        }
+                }
+        }
+        return nullptr;
 }
 
 //std::any SemanticVisitor::visitFucnCallExpr(WPLParser::FuncCallExprContext *ctx){

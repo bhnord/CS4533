@@ -1,0 +1,6 @@
+int error <- 0;
+int func sidesSquared(int a, int b) {
+	while error < 5 do {
+		error <-  (error + 1);
+	}
+}

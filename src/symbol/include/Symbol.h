@@ -36,17 +36,26 @@ struct Symbol
 	std::vector<Param*> *params = nullptr; //for methods
 
 
+	//for scalars
 	Symbol(std::string i, SymBaseType t) {
 		id = i;
 		baseType = t;
 		type = SCALAR;
 	}
 
-	////for functions / processes
+	////for functions 
 	Symbol(std::string i, SymBaseType t, std::vector<Param*> *p){
 		id = i;
 		type = FUNC;
 		baseType = t;
+		params = p;
+	}
+
+	//for procs 
+	Symbol(std::string i, std::vector<Param*> *p){
+		id = i;
+		type = PROC;
+		baseType = UNDEFINED;
 		params = p;
 	}
 
