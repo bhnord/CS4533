@@ -17,10 +17,10 @@ externDeclaration : 'extern' (externProcHeader | externFuncHeader) ';';
 
 procedure         : procHeader block ;
 procHeader        : 'proc' id=ID '(' p=params? ')' ;
-externProcHeader  : 'proc' id=ID '(' ((params ',' ELLIPSIS) | params? | ELLIPSIS?) ')' ;
+externProcHeader  : 'proc' id=ID '(' ((p=params ',' ELLIPSIS) | p=params? | ELLIPSIS?) ')' ;
 function          : fh=funcHeader block  ;
 funcHeader        : t=type 'func' id=ID '(' p=params? ')' ;
-externFuncHeader  : t=type 'func' id=ID '(' ((params ',' ELLIPSIS) | params? | ELLIPSIS?) ')' ;
+externFuncHeader  : t=type 'func' id=ID '(' ((p=params ',' ELLIPSIS) | p=params? | ELLIPSIS?) ')' ;
 
 params            : (p+=param (',' p+=param)*) ;
 param		  : t=type id=ID;
@@ -41,8 +41,8 @@ loop              : 'while' e=expr 'do' b=block ;
 conditional       : 'if' e=expr 'then'? b+=block ('else' b+=block)? ;
 select            : 'select' '{' selectAlt+ '}' ;
 selectAlt         : e=expr ':' s=statement ;  
-call              : id=ID '(' arguments? ')' ';' ;
-arguments         : (arg (',' arg)*) ;  
+call              : id=ID '(' a=arguments? ')' ';' ;
+arguments         : (a+=arg (',' a+=arg)*) ;  
 arg               : (id=ID | c=constant) ; 
 return            : 'return' expr? ';' ;
 

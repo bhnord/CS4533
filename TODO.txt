@@ -15,16 +15,15 @@ visitArrayDeclaration
 arrayIndex 			<-- do you need to check length
 loop
 conditional
+procHeader (basically just copy function) <-- check this
+proc (exit scope of procheader)
+externProcHeader, externFuncHeader
+
 
 selectAlt <-- select done in here
 
 need: --------------------------------------------------------
 FuncCallExpr **  --->> is this just the call expression
-
-externProcHeader, externFuncHeader
-procHeader (basically just copy function) <-- check this
-proc (exit scope of procheader)
-
 call
 arg
 
@@ -56,3 +55,12 @@ PROBLEM WITH NEGATIVE NUMBERS --> extraneous input when you are trying to set a 
 
 how to handle ors in grammar
 ----> find in latest office hours --> watch video
+
+
+
+
+
+
+When ID is wrong on args, seg fault
+segfault on wrong input on function creation and call (in header)
+segfault on external proc

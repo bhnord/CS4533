@@ -85,8 +85,12 @@ struct Symbol
 			: "UNDEFINED";
 
 		std::ostringstream funcAddition;
-		if(type == FUNC){
-			funcAddition << " func(";
+		if(type == FUNC || type == PROC){
+			if(type==FUNC){
+				funcAddition << " func(";
+			} else {
+				funcAddition <<" param(";
+			}
 			if(params != nullptr){
 				for(Param *p: *params){
 					funcAddition << p->toString();

@@ -100,6 +100,125 @@ std::any SemanticVisitor::visitProcHeader(WPLParser::ProcHeaderContext *ctx){
         return nullptr;
 }
 
+std::any SemanticVisitor::visitProcedure(WPLParser::ProcedureContext *ctx){
+	this->visitChildren(ctx);
+	stmgr->exitScope();
+	return nullptr;
+}
+
+
+
+
+///FIND OUT IF i AM SUPPOSED TO EXIT SCOPE HERE !!!!! -------------------------
+std::any SemanticVisitor::visitExternProcHeader(WPLParser::ExternProcHeaderContext *ctx){
+        std::string id = ctx -> id -> getText();
+        std::vector<Param*> *params = nullptr;
+        if (ctx -> p != nullptr) {
+                params = std::any_cast<std::vector<Param*>*>(ctx -> p -> accept(this));
+        }
+        Symbol *sym = new Symbol(id, params);
+        Symbol *symbol = stmgr->addSymbol(sym); // global scope
+        if (symbol == nullptr) {
+                errors.addSemanticError(ctx -> getStart(), "Duplicate variable: " + id);
+        }
+        stmgr->enterScope(); // scope for the parameters
+        if (ctx -> p != nullptr) {
+                for (Param *p : *params) {
+                        Symbol *sym = new Symbol(p->id, p->baseType);
+                        Symbol *symbol = stmgr->addSymbol(sym);
+                        if (symbol == nullptr) {
+                                errors.addSemanticError(ctx -> getStart(), "Duplicate variable: " + id);
+                        }
+                }
+        }
+
+
+	stmgr->exitScope();
+        return nullptr;
+}
+
+std::any SemanticVisitor::visitExternFuncHeader(WPLParser::ExternFuncHeaderContext *ctx) {
+        SymBaseType type = std::any_cast<SymBaseType>(ctx -> t -> accept(this));
+        std::string id = ctx -> id -> getText();
+        std::vector<Param*> *params = nullptr;
+        if (ctx -> p != nullptr) {
+                params = std::any_cast<std::vector<Param*>*>(ctx -> p -> accept(this));
+        }
+        Symbol *sym = new Symbol(id, type, params);
+        Symbol *symbol = stmgr->addSymbol(sym); // global scope
+        if (symbol == nullptr) {
+                errors.addSemanticError(ctx -> getStart(), "Duplicate variable: " + id);
+        }
+        stmgr->enterScope(); // scope for the parameters
+        if (ctx -> p != nullptr) {
+                for (Param *p : *params) {
+                        Symbol *sym = new Symbol(p->id, p->baseType);
+                        Symbol *symbol = stmgr->addSymbol(sym);
+                        if (symbol == nullptr) {
+                                errors.addSemanticError(ctx -> getStart(), "Duplicate variable: " + id);
+                        }
+                }
+        }
+
+
+	stmgr->exitScope();
+        return type;
+}
+
+
+std::any SemanticVisitor::visitCall(WPLParser::CallContext *ctx){
+	std::string id = ctx->id->getText();
+	Symbol *s = stmgr->findSymbol(id);
+	if(s == nullptr){
+		errors.addSemanticError(ctx->getStart(), "Undefined call: " + id);
+	} else {
+		bindings->bind(ctx, s);	
+		std::vector<SymBaseType> *args = std::any_cast<std::vector<SymBaseType>*>(ctx->a->accept(this));
+		std::vector<Param*> *params = s->params;
+		//CHECK IF THEY HAVE EQUAL TYPES
+		unsigned int size = params->size();
+		if(args->size() != size){
+			errors.addSemanticError(ctx->getStart(), "Invalid number of parameters: " + id);
+		} else {
+			for(unsigned int i = 0; i < size; i++){
+				if((*params)[i]->baseType != (*args)[i]){
+					errors.addSemanticError(ctx->getStart(), "Invalid parameter type: " + Symbol::getSymBaseTypeName((*args)[i]) + ", Expected: " + Symbol::getSymBaseTypeName((*params)[i]->baseType) + " for parameter " + (*params)[i]->id);
+				}
+			}
+
+		}
+	}
+	return nullptr;
+}
+
+std::any SemanticVisitor::visitArguments(WPLParser::ArgumentsContext *ctx){
+	std::vector<SymBaseType> *args = new std::vector<SymBaseType>;
+
+	for(WPLParser::ArgContext *a : ctx->a){
+		SymBaseType type = std::any_cast<SymBaseType>(a->accept(this));
+		args->push_back(type);
+	}
+	return args;
+
+}
+
+std::any SemanticVisitor::visitArg(WPLParser::ArgContext *ctx){
+	if(ctx->id == nullptr){
+		return this->visitChildren(ctx);
+	} else {
+		SymBaseType t = SymBaseType::UNDEFINED;
+		std::string id = ctx -> id -> getText();
+		Symbol* symbol = stmgr-> findSymbol(id);
+		if(symbol != nullptr){
+			bindings -> bind(ctx, symbol);
+			t = symbol->baseType;
+		} else {
+			errors.addSemanticError(ctx -> getStart(), "Use of undefined variable: " + id);
+		}
+		return t;
+	}
+}
+
 //std::any SemanticVisitor::visitFucnCallExpr(WPLParser::FuncCallExprContext *ctx){
 //	//find fname in linked
 //	Symbol* symbol = stmgr->findSymbol(ctx->fname->getText());
