@@ -19,6 +19,7 @@
 #include "ErrorHandler.h"
 #include "SemanticVisitor.h"
 // #include "CodegenVisitor.h"
+#include "ErrorListener.h"
 #include "llvm/Support/raw_ostream.h"
 #include "llvm/Support/CommandLine.h"
 #include "llvm/Support/InitLLVM.h"
@@ -96,7 +97,17 @@ int main(int argc, const char* argv[]) {
   WPLParser::CompilationUnitContext* tree = NULL;
 
   // // 3. Parse the program and get the parse tree
+  parser.removeErrorListeners();
+  ErrorListener * l = new ErrorListener();
+  parser.addErrorListener(l);
+
   tree = parser.compilationUnit();
+
+  if(l->hasErrors()){
+	  std::cout << "error in parse: exiting..."<<std::endl;
+	  return -1;
+  }
+
 
   // /******************************************************************
   //  * Perform semantic analysis and populate the symbol table

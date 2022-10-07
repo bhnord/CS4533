@@ -169,7 +169,7 @@ std::any SemanticVisitor::visitExternFuncHeader(WPLParser::ExternFuncHeaderConte
 std::any SemanticVisitor::visitCall(WPLParser::CallContext *ctx){
 	std::string id = ctx->id->getText();
 	Symbol *s = stmgr->findSymbol(id);
-	if(s == nullptr){
+	if(s == nullptr || (s->type != SymType::FUNC && s->type != SymType::PROC)){
 		errors.addSemanticError(ctx->getStart(), "Undefined call: " + id);
 	} else {
 		bindings->bind(ctx, s);	
@@ -190,6 +190,40 @@ std::any SemanticVisitor::visitCall(WPLParser::CallContext *ctx){
 	}
 	return nullptr;
 }
+
+std::any SemanticVisitor::visitFuncCallExpr(WPLParser::FuncCallExprContext *ctx){
+	std::string id = ctx->fname->getText();
+        Symbol *s = stmgr->findSymbol(id);
+	SymBaseType type = SymBaseType::UNDEFINED;
+        if(s == nullptr || s->type != SymType::FUNC){
+		errors.addSemanticError(ctx->getStart(), "Undefined call: " + id);
+	} else {
+		type = s->baseType;
+		bindings->bind(ctx, s);
+		std::vector<SymBaseType> *args = new std::vector<SymBaseType>;
+
+		for(WPLParser::ExprContext *e : ctx->args){
+			SymBaseType type = std::any_cast<SymBaseType>(e->accept(this));
+			args->push_back(type);
+		}
+
+		std::vector<Param*> *params = s->params;
+		//CHECK IF THEY HAVE EQUAL TYPES
+		unsigned int size = params->size();
+		if(args->size() != size){
+			errors.addSemanticError(ctx->getStart(), "Invalid number of parameters: " + id);
+		} else {
+			for(unsigned int i = 0; i < size; i++){
+				if((*params)[i]->baseType != (*args)[i]){
+					errors.addSemanticError(ctx->getStart(), "Invalid parameter type: " + Symbol::getSymBaseTypeName((*args)[i]) + ", Expected: " + Symbol::getSymBaseTypeName((*params)[i]->baseType) + " for parameter " + (*params)[i]->id);
+				}
+			}
+
+		}
+	}
+	return type;
+}
+
 
 std::any SemanticVisitor::visitArguments(WPLParser::ArgumentsContext *ctx){
 	std::vector<SymBaseType> *args = new std::vector<SymBaseType>;
