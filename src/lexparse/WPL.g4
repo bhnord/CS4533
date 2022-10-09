@@ -6,10 +6,11 @@ grammar WPL;
 // Parser rules
 compilationUnit   : e+=cuComponent+ EOF;
 
-cuComponent       : varDeclaration | procedure | function | externDeclaration ;
+////TAKE OUT EXPR FROM CUCOMPONENT!!!!!!!!!!!!!!!!!!!
+cuComponent       : expr| varDeclaration | procedure | function | externDeclaration ;
 varDeclaration    : scalarDeclaration | arrayDeclaration ;
 scalarDeclaration : (t=type| VAR) scalars+=scalar (',' scalars+=scalar)* ';' ;
-scalar            : id=ID varInitializer? ;
+scalar            : id=ID v=varInitializer? ;
 arrayDeclaration  : t=type '[' i=INTEGER ']' id=ID ';' ;       // No dynamic arrays, type not inferred
 type              : b=BOOL | i=INT | s=STR ;  
 varInitializer    : '<-' c=constant ;
@@ -56,10 +57,10 @@ expr              :
                   | arrayIndex                                            # SubscriptExpr
                   | <assoc=right> '-' ex=expr                                # UnaryMinusExpr
                   | <assoc=right> '~' ex=expr                                # UnaryNotExpr
-                  | left=expr (MUL | DIV) right=expr                      # MultExpr
-                  | left=expr (PLUS | MINUS) right=expr                   # AddExpr
-                  | left=expr (LESS | LEQ | GTR | GEQ) right=expr         # RelExpr
-                  | <assoc=right> left=expr (EQUAL | NEQ) right=expr      # EqExpr
+                  | left=expr op=(MUL | DIV) right=expr                      # MultExpr
+                  | left=expr op=(PLUS | MINUS) right=expr                   # AddExpr
+                  | left=expr op=(LESS | LEQ | GTR | GEQ) right=expr         # RelExpr
+                  | <assoc=right> left=expr op=(EQUAL | NEQ) right=expr      # EqExpr
                   | left=expr AND right=expr                              # AndExpr
                   | left=expr OR right=expr                               # OrExpr
                   | '(' ex = expr ')'                                          # ParenExpr

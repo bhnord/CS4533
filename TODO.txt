@@ -48,11 +48,6 @@ x(1,2); -- does not return anything
 -- should not accept expressions
 
 
-PROBLEM WITH NEGATIVE NUMBERS --> extraneous input when you are trying to set a number negative initially
-	tried to add '-' to integer -- change if needed
-
-DO NOT ADD '-' TO INTEGER!!
-
 how to handle ors in grammar
 ----> find in latest office hours --> watch video
 

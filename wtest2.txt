@@ -1,1 +1,4 @@
-5
+int s <- 3, t<-true, n;
+int func s(){
+int k <- 3;
+}

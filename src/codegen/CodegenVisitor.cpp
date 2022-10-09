@@ -8,7 +8,7 @@ std::any CodegenVisitor::visitCompilationUnit(WPLParser::CompilationUnitContext 
   FunctionCallee printExpr(printf_prototype, printf_fn);
 
   // 2. Define the main program.
-  FunctionType *mainFuncType = FunctionType::get(Int32Ty, {Int32Ty, Int8PtrPtrTy}, false);
+  FunctionType *mainFuncType = FunctionType::get(CodegenVisitor::Int32Ty, {CodegenVisitor::Int32Ty, CodegenVisitor::Int8PtrPtrTy}, false);
   Function *mainFunc = Function::Create(mainFuncType,     GlobalValue::ExternalLinkage,
     "main", module);
 
@@ -36,7 +36,7 @@ std::any CodegenVisitor::visitCompilationUnit(WPLParser::CompilationUnitContext 
 
 
 
-  builder->CreateRet(Int32Zero);
+  builder->CreateRet(CodegenVisitor::Int32Zero);
   return nullptr;
 }
 
@@ -63,29 +63,83 @@ std::any CodegenVisitor::visitIDExpr(WPLParser::IDExprContext *ctx){
 	Symbol *symbol = props->getBinding(ctx);
 	Value *v = nullptr;
 	// We made sure that the variable is defined in the semantic analysis phase
-	if (!(symbol->defined)) {
-		errors.addCodegenError(ctx->getStart(), "Undefined variable in expression: " + varId);
-	} else {
-		v = builder->CreateLoad(CodegenVisitor::Int32Ty, symbol->val, varId);
-	}
+//	if (!(symbol->defined)) {
+//		errors.addCodegenError(ctx->getStart(), "Undefined variable in expression: " + varId);
+//	} else {
+//		v = builder->CreateLoad(CodegenVisitor::Int32Ty, symbol->val, varId);
+//	}
 	return v;
 }
 
 
 std::any CodegenVisitor::visitScalarDeclaration(WPLParser::ScalarDeclarationContext *ctx){
 	Value *exVal = nullptr;
-	//eventually fix below!!! ----------------------------------
-	Symbol *varSymbol = props->getBinding(ctx->scalars[0]);
+	//eventually fix below!!! (does not work1!!)----------------------------------
+//	for(WPLParser::ScalarContext *c: ctx->scalars){
+//		Symbol *varSymbol = props->getBinding(c);
+//		Value *v = nullptr;
+//		if (!(varSymbol->defined)) {
+//			//		// Define the symbol and allocate memory.
+//			v = builder->CreateAlloca(CodegenVisitor::Int32Ty, 0, varSymbol->id);
+//			//		varSymbol->defined = true;
+//			//		varSymbol->val = v;
+//		} else {
+//			v = varSymbol->val;
+//		}
+//
+//		builder->CreateStore(exVal, v);
+//	}
+	return exVal;
+}
+
+
+//subs from zero for unary minus
+std::any CodegenVisitor::visitUnaryMinusExpr(WPLParser::UnaryMinusExprContext *ctx){
+	Value *exVal = std::any_cast<Value *>(ctx->ex->accept(this));
+	Value *v = builder->CreateNSWSub(builder->getInt32(0), exVal);
+	return v;
+}
+
+
+//relational expression
+//LESS | LEQ | GTR | GEQ
+std::any CodegenVisitor::visitRelExpr(WPLParser::RelExprContext *ctx){
+	Value *lVal = std::any_cast<Value *>(ctx->left->accept(this));
+	Value *rVal = std::any_cast<Value *>(ctx->right->accept(this));
+	auto op = ctx->op->getType();
+	Value *v1;
+	if(op == WPLParser::LESS){
+		v1 = builder->CreateICmpSLT(lVal, rVal);
+	} else if(op == WPLParser::GTR){
+		v1 = builder->CreateICmpSGT(lVal, rVal);
+	} else {} ///TODO: fix this (add more comparisons)
+	Value *v = builder->CreateZExtOrTrunc(v1, CodegenVisitor::Int32Ty);
+	return v;
+}
+
+//unary not (t/f)
+std::any CodegenVisitor::visitUnaryNotExpr(WPLParser::UnaryNotExprContext *ctx){
+	Value *v = std::any_cast<Value *>(ctx->ex->accept(this));
+	v = builder->CreateZExtOrTrunc(v, CodegenVisitor::Int1Ty);
+	v = builder->CreateXor(v, Int32One);
+	v = builder->CreateZExtOrTrunc(v, CodegenVisitor::Int32Ty);
+	return v;
+}
+
+
+//equality expression (eq or neq)
+std::any CodegenVisitor::visitEqExpr(WPLParser::EqExprContext *ctx){
 	Value *v = nullptr;
-	if (!(varSymbol->defined)) {
-//		// Define the symbol and allocate memory.
-		v = builder->CreateAlloca(CodegenVisitor::Int32Ty, 0, varSymbol->id);
-//		varSymbol->defined = true;
-//		varSymbol->val = v;
-	} else {
-		v = varSymbol->val;
+	Value *lVal = std::any_cast<Value *>(ctx->left->accept(this));
+	Value *rVal = std::any_cast<Value *> (ctx->right->accept(this));
+	auto op = ctx->op->getType();
+	Value *v1;
+	if(op == WPLParser::EQUAL){
+		v1 = builder->CreateICmpEQ(lVal, rVal);
+	} else{ //neq 
+		v1 = builder->CreateICmpNE(lVal, rVal);
 	}
 
-	builder->CreateStore(exVal, v);
-	return exVal;
+	v = builder->CreateZExtOrTrunc(v1, CodegenVisitor::Int32Ty);
+	return v;
 }

@@ -114,11 +114,11 @@ class  CodegenVisitor: public WPLBaseVisitor {
 
 		//  std::any visitSubscriptExpr(WPLParser::SubscriptExprContext *ctx) override;
 
-		//  std::any visitRelExpr(WPLParser::RelExprContext *ctx) override;
+		std::any visitRelExpr(WPLParser::RelExprContext *ctx) override;
 
 		//  std::any visitMultExpr(WPLParser::MultExprContext *ctx) override;
 
-		//  std::any visitUnaryNotExpr(WPLParser::UnaryNotExprContext *ctx) override;
+		std::any visitUnaryNotExpr(WPLParser::UnaryNotExprContext *ctx) override;
 
 		//  std::any visitAddExpr(WPLParser::AddExprContext *ctx) override;
 
@@ -126,13 +126,13 @@ class  CodegenVisitor: public WPLBaseVisitor {
 
 		//  std::any visitOrExpr(WPLParser::OrExprContext *ctx) override;
 
-		//  std::any visitEqExpr(WPLParser::EqExprContext *ctx) override;
+		std::any visitEqExpr(WPLParser::EqExprContext *ctx) override;
 
 		//  std::any visitParenExpr(WPLParser::ParenExprContext *ctx) override;
 
 		//  std::any visitFuncCallExpr(WPLParser::FuncCallExprContext *ctx) override;
 
-		//  std::any visitUnaryMinusExpr(WPLParser::UnaryMinusExprContext *ctx) override;
+		std::any visitUnaryMinusExpr(WPLParser::UnaryMinusExprContext *ctx) override;
 
 		std::string getErrors() { return errors.errorList(); }
 		// STManager *getSTManager() { return stmgr; }

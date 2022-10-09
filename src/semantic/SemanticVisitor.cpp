@@ -18,15 +18,25 @@ std::any SemanticVisitor::visitScalarDeclaration(WPLParser::ScalarDeclarationCon
 		type = std::any_cast<SymBaseType>(ctx->t->accept(this));
 	} else {
 		type = UNDEFINED;
+		//FIGURE OUT VAR ASSIGNMENT
 	}
 
 	//get the variable name(s)
 	for (auto s: ctx->scalars){
 		id = s -> id -> getText();
-		Symbol *sym = new Symbol(id, type );
+
+
+		//CHECK TYPE IF THERE IS DECLARATION
+		if(s->v !=nullptr){
+			SymBaseType sType = std::any_cast<SymBaseType>(s->v->accept(this));
+			if(sType != type){
+				errors.addSemanticError(s->getStart(), "Incorrect type: " + id + " " + Symbol::getSymBaseTypeName(sType) + ", Expected " + Symbol::getSymBaseTypeName(type));
+			}
+		}
+		Symbol *sym = new Symbol(id, type);
 		Symbol *symbol = stmgr->addSymbol(sym);
 		if(symbol == nullptr){
-			errors.addSemanticError(ctx->getStart(), "Duplicate variable: " + id);
+			errors.addSemanticError(s->getStart(), "Duplicate variable: " + id);
 		} else {
 			///ADDED BINDING SHERE -------------------
 			bindings->bind(s, symbol);
@@ -80,27 +90,27 @@ std::any SemanticVisitor::visitFunction(WPLParser::FunctionContext *ctx){
 }
 
 std::any SemanticVisitor::visitProcHeader(WPLParser::ProcHeaderContext *ctx){
-        std::string id = ctx -> id -> getText();
-        std::vector<Param*> *params = nullptr;
-        if (ctx -> p != nullptr) {
-                params = std::any_cast<std::vector<Param*>*>(ctx -> p -> accept(this));
-        }
-        Symbol *sym = new Symbol(id, params);
-        Symbol *symbol = stmgr->addSymbol(sym); // global scope
-        if (symbol == nullptr) {
-                errors.addSemanticError(ctx -> getStart(), "Duplicate variable: " + id);
-        }
-        stmgr->enterScope(); // scope for the parameters
-        if (ctx -> p != nullptr) {
-                for (Param *p : *params) {
-                        Symbol *sym = new Symbol(p->id, p->baseType);
-                        Symbol *symbol = stmgr->addSymbol(sym);
-                        if (symbol == nullptr) {
-                                errors.addSemanticError(ctx -> getStart(), "Duplicate variable: " + id);
-                        }
-                }
-        }
-        return nullptr;
+	std::string id = ctx -> id -> getText();
+	std::vector<Param*> *params = nullptr;
+	if (ctx -> p != nullptr) {
+		params = std::any_cast<std::vector<Param*>*>(ctx -> p -> accept(this));
+	}
+	Symbol *sym = new Symbol(id, params);
+	Symbol *symbol = stmgr->addSymbol(sym); // global scope
+	if (symbol == nullptr) {
+		errors.addSemanticError(ctx -> getStart(), "Duplicate variable: " + id);
+	}
+	stmgr->enterScope(); // scope for the parameters
+	if (ctx -> p != nullptr) {
+		for (Param *p : *params) {
+			Symbol *sym = new Symbol(p->id, p->baseType);
+			Symbol *symbol = stmgr->addSymbol(sym);
+			if (symbol == nullptr) {
+				errors.addSemanticError(ctx -> getStart(), "Duplicate variable: " + id);
+			}
+		}
+	}
+	return nullptr;
 }
 
 std::any SemanticVisitor::visitProcedure(WPLParser::ProcedureContext *ctx){
@@ -114,10 +124,10 @@ std::any SemanticVisitor::visitProcedure(WPLParser::ProcedureContext *ctx){
 
 ///FIND OUT IF i AM SUPPOSED TO EXIT SCOPE HERE !!!!! -------------------------
 std::any SemanticVisitor::visitExternProcHeader(WPLParser::ExternProcHeaderContext *ctx){
-        std::string id = ctx -> id -> getText();
-        std::vector<Param*> *params = nullptr;
-        if (ctx -> p != nullptr) {
-                params = std::any_cast<std::vector<Param*>*>(ctx -> p -> accept(this));
+	std::string id = ctx -> id -> getText();
+	std::vector<Param*> *params = nullptr;
+	if (ctx -> p != nullptr) {
+		params = std::any_cast<std::vector<Param*>*>(ctx -> p -> accept(this));
         }
         Symbol *sym = new Symbol(id, params);
         Symbol *symbol = stmgr->addSymbol(sym); // global scope
