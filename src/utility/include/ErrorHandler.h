@@ -4,7 +4,7 @@
 #include <vector>
 #include <sstream>
 
-enum ErrType {SEMANTIC}; ///ADD MORE TYPES
+enum ErrType {SEMANTIC, CODEGEN}; ///ADD MORE TYPES
 
 struct WPLError {
   ErrType type;
@@ -22,9 +22,16 @@ struct WPLError {
 
 class ErrorHandler {
   public:
-    void addSemanticError(antlr4::Token* t, std::string msg) {
+    void addCodegenError(antlr4::Token* t, std::string msg) {
       WPLError* e = new WPLError();
       e->type = SEMANTIC;
+      e->token = t;
+      e->message = msg;
+      errors.push_back(e);
+    }
+void addSemanticError(antlr4::Token* t, std::string msg) {
+      WPLError* e = new WPLError();
+      e->type = CODEGEN;
       e->token = t;
       e->message = msg;
       errors.push_back(e);

@@ -2,6 +2,7 @@
 #include<string>
 #include<sstream>
 #include<vector>
+#include "llvm/IR/Value.h"
 
 enum SymType {SCALAR, ARRAY, FUNC, PROC};
 enum SymBaseType {INT, BOOL, STR, UNDEFINED};
@@ -28,6 +29,8 @@ struct Symbol
 	std::string id;
 	SymType type;
 	SymBaseType baseType;
+	bool defined=false;
+	llvm::Value *val=nullptr;
 
 	////
 	SymType retType;

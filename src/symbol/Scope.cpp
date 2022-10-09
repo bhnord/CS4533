@@ -52,7 +52,7 @@ Symbol* Scope::addSymbol(Symbol* symbol) {
  * @return Symbol* (nullptr if the symbol is not there)
  */
 Symbol* Scope::findSymbol(std::string id) {
-  Symbol* s;
+  Symbol* s = nullptr;
   std::map<std::string, Symbol*>::const_iterator i = symbols.find(id);
   if (i == symbols.end()) {
     s = nullptr;

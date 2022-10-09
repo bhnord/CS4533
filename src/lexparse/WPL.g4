@@ -119,7 +119,7 @@ RBRACE					  :	'}' ;
 
 // Literals, identifiers, and whitespace
 WS 						    :	[ \t\r\n\f]+ -> skip ;
-INTEGER					  :	'-'? DIGIT+ ;
+INTEGER					  :	DIGIT+ ;
 BOOLEAN           : 'true' | 'false' ;
 ID      				  : LETTER (LETTER|DIGIT|UNDERSCORE)* ;
 STRING			      : '"' ('\\'. | ~[\n])*? '"' ;

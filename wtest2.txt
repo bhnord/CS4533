@@ -1,7 +1,1 @@
-int func dd(int ii, boolean bb, str ss){
-int k<- 3;
-}
-int func test(int v){
-	int t <- 5;
-	t <- dd(7, true, false);
-}
+5

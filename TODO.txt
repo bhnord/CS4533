@@ -51,16 +51,9 @@ x(1,2); -- does not return anything
 PROBLEM WITH NEGATIVE NUMBERS --> extraneous input when you are trying to set a number negative initially
 	tried to add '-' to integer -- change if needed
 
-
+DO NOT ADD '-' TO INTEGER!!
 
 how to handle ors in grammar
 ----> find in latest office hours --> watch video
 
-
-
-
-
-
-When ID is wrong on args, seg fault
-segfault on wrong input on function creation and call (in header)
-segfault on external proc
+check multiple declaration!!!!!!!!!!!!!

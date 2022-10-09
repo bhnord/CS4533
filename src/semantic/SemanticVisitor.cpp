@@ -27,6 +27,9 @@ std::any SemanticVisitor::visitScalarDeclaration(WPLParser::ScalarDeclarationCon
 		Symbol *symbol = stmgr->addSymbol(sym);
 		if(symbol == nullptr){
 			errors.addSemanticError(ctx->getStart(), "Duplicate variable: " + id);
+		} else {
+			///ADDED BINDING SHERE -------------------
+			bindings->bind(s, symbol);
 		}
 	}
 	return nullptr;

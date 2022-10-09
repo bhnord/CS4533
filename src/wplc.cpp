@@ -18,7 +18,7 @@
 #include "WPLParser.h"
 #include "ErrorHandler.h"
 #include "SemanticVisitor.h"
-// #include "CodegenVisitor.h"
+#include "CodegenVisitor.h"
 #include "ErrorListener.h"
 #include "llvm/Support/raw_ostream.h"
 #include "llvm/Support/CommandLine.h"
@@ -120,43 +120,43 @@ int main(int argc, const char* argv[]) {
   SemanticVisitor* sv = new SemanticVisitor(stm, pm);
   sv->visitCompilationUnit(tree);
 
-////
+  ////
   std::cout <<stm->toString() <<std::endl;
   std::cout <<"\n\n-------------------\nBINDINGS\n" << pm->toString() << std::endl;
-////
+  ////
   if (sv->hasErrors()) {
-   std::cerr << sv->getErrors() << std::endl;
-   return -1;
+	  std::cerr << sv->getErrors() << std::endl;
+	  return -1;
   }
 
   // // Generate the LLVM IR code
-  // CodegenVisitor* cv = new CodegenVisitor(pm, "WPLC.ll");
-  // cv->visitProgram(tree);
-  // if (cv->hasErrors()) {
-  //   std::cerr << cv->getErrors() << std::endl;
-  //   return -1;
-  // }
+  CodegenVisitor* cv = new CodegenVisitor(pm, "WPLC.ll");
+  cv->visitCompilationUnit(tree);
+  if (cv->hasErrors()) {
+          std::cerr << cv->getErrors() << std::endl;
+          return -1;
+  }
 
-  // // Print out the module contents.
-  // llvm::Module *module = cv->getModule();
-  // std::cout << std::endl << std::endl;
-  // if (printOutput) {
-  //   cv->modPrint();
-  // }
+  //// // Print out the module contents.
+  llvm::Module *module = cv->getModule();
+  std::cout << std::endl << std::endl;
+ // if (printOutput) {
+          cv->modPrint();
+  //}
 
-  // // Dump the code to an output file
-  // if (!noCode) {
-  //   std::string irFileName;
-  //   if (outputFileName != "-") {
-  //     irFileName = outputFileName;
-  //   } else {
-  //     irFileName = inputFileName.substr(0,inputFileName.find_last_of('.'))+".ll";
-  //   }
-  //   std::error_code ec;
-  //   llvm::raw_fd_ostream irFileStream(irFileName, ec);
-  //   module->print(irFileStream, nullptr);
-  //   irFileStream.flush();
-  // }
+  //// // Dump the code to an output file
+  //if (!noCode) {
+  //        std::string irFileName;
+  //        if (outputFileName != "-") {
+  //      	  irFileName = outputFileName;
+  //        } else {
+  //      	  irFileName = inputFileName.substr(0,inputFileName.find_last_of('.'))+".ll";
+  //        }
+  //        std::error_code ec;
+  //        llvm::raw_fd_ostream irFileStream(irFileName, ec);
+  //        module->print(irFileStream, nullptr);
+  //        irFileStream.flush();
+  //}
 
-  return 0;
+  //return 0;
 }

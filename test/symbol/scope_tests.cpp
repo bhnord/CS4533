@@ -34,6 +34,7 @@ TEST_CASE("Find existing element", "[symbol") {
 TEST_CASE("Look for non-existent element", "[symbol]") {
   Scope* scope = new Scope();
   Symbol* s = scope->addSymbol("a", SymBaseType::BOOL);
+  CHECK(s!=nullptr);
   Symbol* s1 = scope->findSymbol("b");
   CHECK(s1 == nullptr);
 }
@@ -41,6 +42,7 @@ TEST_CASE("Look for non-existent element", "[symbol]") {
 TEST_CASE("Duplicate symbol", "[symbol]") {
   Scope* scope = new Scope();
   Symbol* s = scope->addSymbol("a", SymBaseType::BOOL);
+  CHECK(s!=nullptr);
   Symbol* s1 = new Symbol("a", SymBaseType::INT);
   Symbol* s2 = scope->addSymbol(s1);
 
