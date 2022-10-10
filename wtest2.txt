@@ -1,4 +1,4 @@
-int func t(){
+int func t(int k, int v){
 	return 4;
 }
 

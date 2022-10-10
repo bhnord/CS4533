@@ -58,3 +58,6 @@ check multiple declaration!!!!!!!!!!!!!
 
 -----------------
 add return checking on semantic analysis
+
+
+do we need bindings on param?

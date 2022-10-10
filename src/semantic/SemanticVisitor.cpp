@@ -73,12 +73,16 @@ std::any SemanticVisitor::visitFuncHeader(WPLParser::FuncHeaderContext *ctx) {
 	}
 	stmgr->enterScope(); // scope for the parameters
 	if (ctx -> p != nullptr) {
+		unsigned int pnum =0;
 		for (Param *p : *params) {
 			Symbol *sym = new Symbol(p->id, p->baseType);
 			Symbol *symbol = stmgr->addSymbol(sym);
+
 			if (symbol == nullptr) {
 				errors.addSemanticError(ctx -> getStart(), "Duplicate variable: " + id);
-			}
+			} else {
+				bindings->bind(ctx->p->p[pnum++], sym);
+			}	
 		}
 	}
 	return type;
