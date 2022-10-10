@@ -5,6 +5,5 @@ proc t(int k, int v){
 	} else {
 		int x <- 18;
 	}
-	return;
 }
 

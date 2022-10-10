@@ -23,7 +23,6 @@ then:                                             ; preds = %block
   br label %block3
 
 cont:                                             ; preds = %block3, %block2
-  ret i32 0
 
 else:                                             ; preds = %block
   br label %block2
