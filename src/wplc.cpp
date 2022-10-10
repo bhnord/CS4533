@@ -124,10 +124,14 @@ int main(int argc, const char* argv[]) {
   std::cout <<stm->toString() <<std::endl;
   std::cout <<"\n\n-------------------\nBINDINGS\n" << pm->toString() << std::endl;
   ////
+std::cout << "PRINTING ERRORS:" << std::endl;
+
   if (sv->hasErrors()) {
 	  std::cerr << sv->getErrors() << std::endl;
 	  return -1;
   }
+
+  std::cout << "STARTING CODEGEN" << std::endl;
 
   // // Generate the LLVM IR code
   CodegenVisitor* cv = new CodegenVisitor(pm, "WPLC.ll");
@@ -136,7 +140,6 @@ int main(int argc, const char* argv[]) {
           std::cerr << cv->getErrors() << std::endl;
           return -1;
   }
-  std::cout << "STARTING CODEGEN" << std::endl;
 
   ////// // Print out the module contents.
   llvm::Module *module = cv->getModule();

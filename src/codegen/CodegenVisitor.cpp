@@ -53,7 +53,6 @@ std::any CodegenVisitor::visitConstant(WPLParser::ConstantContext *ctx){
 			v = builder->getInt32(0);
 		}
 	} ///STILL NEED TO DO STRING!!
-	v = builder->getInt32(0);
 	return v;
 
 
@@ -263,7 +262,8 @@ std::any CodegenVisitor::visitProcedure(WPLParser::ProcedureContext *ctx) {
 
         builder->SetInsertPoint(bBlock);
         BasicBlock *b = std::any_cast<BasicBlock *>(ctx->b->accept(this));
-        //ret is created inside block
+        //ret can be created inside block
+	builder->CreateRet(nullptr);
 
         builder->SetInsertPoint(bBlock);
         builder->CreateBr(b);
@@ -332,11 +332,27 @@ std::any CodegenVisitor::visitFuncHeader(WPLParser::FuncHeaderContext *ctx){
 	       //	funcType = FunctionType::get(CodegenVisitor::Int8PtrPtrTy, {CodegenVisitor::Int32Ty, CodegenVisitor::Int8PtrPtrTy}, false); 
 	}
 	Function *func = Function::Create(funcType, Function::ExternalLinkage, sym->id, module);
+	
+	if(ctx->p != nullptr){
+		std::vector<WPLParser::ParamContext *> p = ctx->p->p;
+		sym->func = func;
 
-	sym->func = func;
-	unsigned Idx = 0;
-	for (auto &Arg : func->args())
-		Arg.setName(((*(sym->params))[Idx++])->id);
+		unsigned Idx = 0;
+		for (auto &Arg : func->args())
+			Arg.setName(((*(sym->params))[Idx++])->id);
+
+
+		Function::arg_iterator args = func->arg_begin();
+		for (WPLParser::ParamContext * px: p){
+			Value *v = args++;
+
+			Symbol *sym = props->getBinding(px);
+
+			sym->val = v;
+			sym->defined = true;
+
+		}
+	}
 
 	return func;
 }
@@ -405,11 +421,11 @@ std::any CodegenVisitor::visitConditional(WPLParser::ConditionalContext *ctx){
 	Value *cond = std::any_cast<Value *>(ctx->e->accept(this));
 
 
-       //blocks and setup
-        Function *theFunc = builder->GetInsertBlock()->getParent();
-        BasicBlock *currBlock = builder->GetInsertBlock();
+	//blocks and setup
+	Function *theFunc = builder->GetInsertBlock()->getParent();
+	BasicBlock *currBlock = builder->GetInsertBlock();
 	BasicBlock *tBlock = BasicBlock::Create(*context, "then", theFunc);
-        BasicBlock *endBlock = BasicBlock::Create(*context, "cont", theFunc);
+	BasicBlock *endBlock = BasicBlock::Create(*context, "cont", theFunc);
 	BasicBlock *eBlock = nullptr;
 
 

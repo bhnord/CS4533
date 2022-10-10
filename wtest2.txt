@@ -1,9 +1,7 @@
-proc t(int k, int v){
-	boolean s <- false;
-	if s {
-		int k <- 4;
-	} else {
-		int x <- 18;
-	}
+int k <- 0;
+int func t(){
+ int j <- 1;
+ j <- k;
+ return 2;
 }
 

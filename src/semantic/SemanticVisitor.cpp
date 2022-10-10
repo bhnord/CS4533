@@ -277,7 +277,7 @@ std::any SemanticVisitor::visitArg(WPLParser::ArgContext *ctx){
 			bindings -> bind(ctx, symbol);
 			t = symbol->baseType;
 		} else {
-			errors.addSemanticError(ctx -> getStart(), "Use of undefined variable: " + id);
+			errors.addSemanticError(ctx -> getStart(), "Use of undefined variable:    " + id);
 		}
 		return t;
 	}
@@ -329,7 +329,7 @@ std::any SemanticVisitor::visitArrayIndex(WPLParser::ArrayIndexContext *ctx){
 		bindings -> bind(ctx, symbol);
 		t = symbol->baseType;
 	} else {
-		errors.addSemanticError(ctx -> getStart(), "Use of undefined variable    : " + id);
+		errors.addSemanticError(ctx -> getStart(), "Use of undefined variable     : " + id);
 	}
 	return t;
 }	
@@ -343,7 +343,7 @@ std::any SemanticVisitor::visitArrayLengthExpr(WPLParser::ArrayLengthExprContext
 		bindings -> bind(ctx, symbol);
 		t = SymBaseType::INT;
 	} else {
-		errors.addSemanticError(ctx -> getStart(), "Use of undefined variable: " + id);
+		errors.addSemanticError(ctx -> getStart(), "Use of undefined variable:    " + id);
 	}
 	return t;
 }
@@ -380,7 +380,7 @@ std::any SemanticVisitor::visitIDExpr(WPLParser::IDExprContext *ctx) {
 		bindings -> bind(ctx, symbol);
 		t = symbol->baseType;
 	} else {
-		errors.addSemanticError(ctx -> getStart(), "Use of undefined variable: " + id);
+		errors.addSemanticError(ctx -> getStart(), "Use of undefined variable:    " + id);
 	}
 	return t; 
 }
@@ -390,17 +390,13 @@ std::any SemanticVisitor::visitAssignment(WPLParser::AssignmentContext *ctx){
 	SymBaseType right = std::any_cast<SymBaseType>(ctx->e->accept(this));
 
 	SymBaseType left  = SymBaseType::UNDEFINED;
-	if(ctx -> target != nullptr){
-		std::string id = ctx -> target -> getText();
-		Symbol* symbol = stmgr-> findSymbol(id);
-		if(symbol != nullptr){
-			bindings -> bind(ctx, symbol);
-			left = symbol->baseType;
-		} else {
-			errors.addSemanticError(ctx -> getStart(), "Use of undefined variable: " + id);
-		}
+	std::string id = ctx -> target -> getText();
+	Symbol* symbol = stmgr-> findSymbol(id);
+	if(symbol != nullptr){
+		bindings -> bind(ctx, symbol);
+		left = symbol->baseType;
 	} else {
-		left = std::any_cast<SymBaseType>(ctx->arr->accept(this)); 
+		errors.addSemanticError(ctx -> getStart(), "Use of undefined variable: " + id);
 	}
 
 	if(left != right){
@@ -469,31 +465,6 @@ std::any SemanticVisitor::visitSelectAlt(WPLParser::SelectAltContext *ctx){
 	return t;
 }
 
-////////////////////////////////////////////////
-
-
-//std::any SemanticVisitor::visitAssignExpression(WPLParser::AssignExpressionContext *ctx) {
-//  // Visit the expression
-//  SymBaseType result = std::any_cast<SymBaseType>(ctx->ex->accept(this));
-//  if (result == UNDEFINED) {
-//    errors.addSemanticError(ctx->getStart(), "Expression evaluates to an UNDEFINED type");
-//  }
-//  std::string varId = ctx->v->getText();
-//  Symbol *symbol = stmgr->findSymbol(varId);
-//  if (symbol == nullptr) {
-//    // Undefined: add it
-//    symbol = stmgr->addSymbol(varId, result);
-//  } else {
-//    symbol->type = result;
-//  }
-//  // For the Calculator, we don't have to check the type of the variable since
-//  // it would be redefined here.
-//  return result;
-//}
-//
-/**
- * @brief Constant.type = INT, STR, BOOL
- */
 std::any SemanticVisitor::visitConstant(WPLParser::ConstantContext *ctx) {
 	if(ctx->i != nullptr){
 		return SymBaseType::INT;
@@ -592,29 +563,6 @@ std::any SemanticVisitor::visitRelExpr(WPLParser::RelExprContext *ctx) {
 	return type;
 }
 
-
-//
-//
-///**
-// * @brief BinaryRelExpr.type = BOOL && left.type == INT && right.type == INT
-// *
-// * @return SymBaseType::BOOL if there are no errors or SymBaseType::UNDEFINED if there are errors.
-// */
-// std::any SemanticVisitor::visitBinaryRelExpr(WPLParser::BinaryRelExprContext *ctx) {
-//   SymBaseType type = BOOL;
-//   auto left = std::any_cast<SymBaseType>(ctx -> left ->accept(this));
-//   if (left != SymBaseType::INT){ // Type mismatch
-//     errors.addSemanticError(ctx->getStart(), "INT left expression expected, but was " + Symbol::getSymBaseTypeName(left));
-//     type = SymBaseType::UNDEFINED;;
-//   }
-//   auto right = std::any_cast<SymBaseType>(ctx -> right ->accept(this));
-//   if (right != SymBaseType::INT){ // Type mismatch
-//     errors.addSemanticError(ctx->getStart(), "INT right expression expected, but was " + Symbol::getSymBaseTypeName(right));
-//     type = SymBaseType::UNDEFINED;
-//   }
-//   return type;
-// }
-
 //
 /**
  * @brief EqExpr.type = SymBaseType::BOOL && left.type == right.type
@@ -640,25 +588,4 @@ std::any SemanticVisitor::visitEqExpr(WPLParser::EqExprContext *ctx) {
 std::any SemanticVisitor::visitParenExpr(WPLParser::ParenExprContext *ctx) {
 	return ctx->ex->accept(this);
 }
-//
-//
-///**
-// * @brief v.defined == TRUE && VariableExpr.type = v.type
-// *
-// * @return The type of the variable as found in the symbol table or UNDEFINED if
-// *  it is not defined in the symbol table.
-// */
-//std::any SemanticVisitor::visitVariableExpr(WPLParser::VariableExprContext *ctx) {
-//  SymBaseType result = UNDEFINED;
-//  std::string varId = ctx->v->getText();
-//  Symbol *symbol = stmgr->findSymbol(varId);
-//  if (symbol == nullptr) {
-//    // Undefined: error
-//    errors.addSemanticError(ctx->getStart(), "Undefined variable in expression: " + varId);
-//  } else {
-//    // bind the symbol to this node
-//    bindings->bind(ctx, symbol);
-//    result = symbol->type;
-//  }
-//  return result;
-//}
+
