@@ -7,7 +7,7 @@ grammar WPL;
 compilationUnit   : e+=cuComponent+ EOF;
 
 ////TAKE OUT EXPR  and  statement FROM CUCOMPONENT!!!!!!!!!!!!!!!!!!!
-cuComponent       : expr | statement| varDeclaration | procedure | function | externDeclaration ;
+cuComponent       : varDeclaration | procedure | function | externDeclaration ;
 varDeclaration    : scalarDeclaration | arrayDeclaration ;
 scalarDeclaration : (t=type| VAR) scalars+=scalar (',' scalars+=scalar)* ';' ;
 scalar            : id=ID v=varInitializer? ;

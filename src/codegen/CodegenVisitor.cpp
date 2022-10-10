@@ -8,13 +8,13 @@ std::any CodegenVisitor::visitCompilationUnit(WPLParser::CompilationUnitContext 
 	FunctionCallee printExpr(printf_prototype, printf_fn);
 
 	// 2. Define the main program.
-	FunctionType *mainFuncType = FunctionType::get(CodegenVisitor::Int32Ty, {CodegenVisitor::Int32Ty, CodegenVisitor::Int8PtrPtrTy}, false);
-	Function *mainFunc = Function::Create(mainFuncType,     GlobalValue::ExternalLinkage,
-			"main", module);
-
-//	// 3. Create a basic block and attach it to the builder.
-	BasicBlock *bBlock = BasicBlock::Create(module->getContext(), "entry", mainFunc);
-	builder->SetInsertPoint(bBlock);
+//	FunctionType *mainFuncType = FunctionType::get(CodegenVisitor::Int32Ty, {CodegenVisitor::Int32Ty, CodegenVisitor::Int8PtrPtrTy}, false);
+//	Function *mainFunc = Function::Create(mainFuncType,     GlobalValue::ExternalLinkage,
+//			"main", module);
+//
+//	//	// 3. Create a basic block and attach it to the builder.
+//	BasicBlock *bBlock = BasicBlock::Create(module->getContext(), "entry", mainFunc);
+//	builder->SetInsertPoint(bBlock);
 
 
 
@@ -22,21 +22,21 @@ std::any CodegenVisitor::visitCompilationUnit(WPLParser::CompilationUnitContext 
 	// COMING SOON to a code generator near you!
 	for(auto e: ctx-> e){
 		e->accept(this);
-	//	//eval and print e
-        //        Value *exprResult = std::any_cast<Value *>(e->accept(this));
-	//	auto et = e->getText(); 
-	//	StringRef formatRef = "Expression %s evaluates to %d\n";
-	//	auto gFormat = builder->CreateGlobalStringPtr(formatRef, "fmtStr");
-	//	StringRef exprRef = et;
-	//	auto exFormat = builder->CreateGlobalStringPtr(exprRef, "exprStr");
-	//	builder->CreateCall(printf_fn, {gFormat, exFormat, exprResult});
+		//	//eval and print e
+		//        Value *exprResult = std::any_cast<Value *>(e->accept(this));
+		//	auto et = e->getText(); 
+		//	StringRef formatRef = "Expression %s evaluates to %d\n";
+		//	auto gFormat = builder->CreateGlobalStringPtr(formatRef, "fmtStr");
+		//	StringRef exprRef = et;
+		//	auto exFormat = builder->CreateGlobalStringPtr(exprRef, "exprStr");
+		//	builder->CreateCall(printf_fn, {gFormat, exFormat, exprResult});
 
 	}
 
 
 
 
-	builder->CreateRet(CodegenVisitor::Int32Zero);
+//	builder->CreateRet(CodegenVisitor::Int32Zero);
 	return nullptr;
 }
 
@@ -75,7 +75,12 @@ std::any CodegenVisitor::visitIDExpr(WPLParser::IDExprContext *ctx){
 std::any CodegenVisitor::visitScalar(WPLParser::ScalarContext *ctx){
 	Value *v = nullptr;
 	Value *exVal = nullptr;
+
+	//globals
 	if(ctx->v != nullptr){
+
+		bool inFunc = builder->GetInsertBlock() != nullptr;
+
 		exVal =  std::any_cast<Value *>(ctx->v->accept(this));
 		Symbol *varSymbol = props->getBinding(ctx);  // child variable symbol
 		if (varSymbol == nullptr) {
@@ -83,13 +88,19 @@ std::any CodegenVisitor::visitScalar(WPLParser::ScalarContext *ctx){
 		}
 		if (!(varSymbol->defined)) {
 			// Define the symbol and allocate memory.
-			v = builder->CreateAlloca(CodegenVisitor::Int32Ty, 0, varSymbol->id);
+			if(!inFunc){
+				module->getOrInsertGlobal(varSymbol->id, CodegenVisitor::Int32Ty);
+				v = module->getNamedGlobal(varSymbol->id);
+			} else {
+				v = builder->CreateAlloca(CodegenVisitor::Int32Ty, 0, varSymbol->id);
+			}
 			varSymbol->defined = true;
 			varSymbol->val = v;
 		} else {
 			v = varSymbol->val;
 		}
-		builder->CreateStore(exVal, v);
+		if(inFunc)
+			builder->CreateStore(exVal, v);
 	}
 
 	return exVal;
@@ -219,14 +230,14 @@ std::any CodegenVisitor::visitAndExpr(WPLParser::AndExprContext *ctx){
 //or expression ---> shortcut out if left is true 
 std::any CodegenVisitor::visitOrExpr(WPLParser::OrExprContext *ctx){
 	Value *lVal = std::any_cast<Value *>(ctx->left->accept(this));
-//
-//
-//	//blocks and setup
+	//
+	//
+	//	//blocks and setup
 	Function *theFunc = builder->GetInsertBlock()->getParent();
 	BasicBlock *currBlock = builder->GetInsertBlock();
 	BasicBlock *endBlock = BasicBlock::Create(*context, "cont", theFunc);
 	BasicBlock *rBlock = BasicBlock::Create(*context, "right", theFunc);
-	
+
 	Value *t = builder->CreateICmpEQ(lVal, builder->getInt32(1));
 	builder->CreateCondBr(t, endBlock, rBlock);
 	//	
@@ -255,24 +266,24 @@ std::any CodegenVisitor::visitArrayLengthExpr(WPLParser::ArrayLengthExprContext 
 
 //create procedure
 std::any CodegenVisitor::visitProcedure(WPLParser::ProcedureContext *ctx) {
-        BasicBlock *main = builder->GetInsertBlock();
-        Function *proc = std::any_cast<Function *>(ctx->ph->accept(this));
-        BasicBlock *bBlock = BasicBlock::Create(*context, ctx->ph->id->getText() + "head", proc);
+	BasicBlock *main = builder->GetInsertBlock();
+	Function *proc = std::any_cast<Function *>(ctx->ph->accept(this));
+	BasicBlock *bBlock = BasicBlock::Create(*context, ctx->ph->id->getText() + "head", proc);
 
 
-        builder->SetInsertPoint(bBlock);
-        BasicBlock *b = std::any_cast<BasicBlock *>(ctx->b->accept(this));
-        //ret can be created inside block
+	builder->SetInsertPoint(bBlock);
+	BasicBlock *b = std::any_cast<BasicBlock *>(ctx->b->accept(this));
+	//ret can be created inside block
 	builder->CreateRet(nullptr);
 
-        builder->SetInsertPoint(bBlock);
-        builder->CreateBr(b);
-        ////EVENTUALLY REMOVE THIS !!!!!!!!
+	builder->SetInsertPoint(bBlock);
+	builder->CreateBr(b);
+	////EVENTUALLY REMOVE THIS !!!!!!!!
 
-        builder->SetInsertPoint(main);
+	builder->SetInsertPoint(main);
 
-        return nullptr;
-	
+	return nullptr;
+
 }
 
 //procedure header and func setup
@@ -332,7 +343,7 @@ std::any CodegenVisitor::visitFuncHeader(WPLParser::FuncHeaderContext *ctx){
 	       //	funcType = FunctionType::get(CodegenVisitor::Int8PtrPtrTy, {CodegenVisitor::Int32Ty, CodegenVisitor::Int8PtrPtrTy}, false); 
 	}
 	Function *func = Function::Create(funcType, Function::ExternalLinkage, sym->id, module);
-	
+
 	if(ctx->p != nullptr){
 		std::vector<WPLParser::ParamContext *> p = ctx->p->p;
 		sym->func = func;
@@ -463,4 +474,18 @@ std::any CodegenVisitor::visitConditional(WPLParser::ConditionalContext *ctx){
 }
 
 
+std::any CodegenVisitor::visitAssignment(WPLParser::AssignmentContext *ctx){
 
+	Value *v = nullptr;
+	Value *exVal = nullptr;
+	exVal =  std::any_cast<Value *>(ctx->e->accept(this));
+	Symbol *varSymbol = props->getBinding(ctx);  // child variable symbol
+	if (varSymbol == nullptr) {
+		errors.addCodegenError(ctx->getStart(), "Undefined variable in expression: " + ctx->target->getText());
+	}
+	v = varSymbol->val;
+	builder->CreateStore(exVal, v);
+
+	return exVal;
+
+}

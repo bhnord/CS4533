@@ -1,22 +1,16 @@
 ; ModuleID = 'WPLC.ll'
 source_filename = "WPLC.ll"
 
+@k = external global i32
+
 declare i8* @printf(...)
 
-define i32 @main(i32 %0, i8** %1) {
-entry:
-  %k = alloca i32, align 4
-  store i32 0, i32* %k, align 4
-  ret i32 0
-}
-
-define i32 @t() {
-thead:
+define i32 @c(i32 %s) {
+chead:
   br label %block
 
-block:                                            ; preds = %thead
-  %j = alloca i32, align 4
-  store i32 1, i32* %j, align 4
-  %k = load i32, i32* %k, align 4
-  ret i32 2
+block:                                            ; preds = %chead
+  %s1 = load i32, i32 %s, align 4
+  store i32 %s1, i32* @k, align 4
+  ret i32 4
 }
