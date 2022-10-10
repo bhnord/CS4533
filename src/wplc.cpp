@@ -136,31 +136,32 @@ int main(int argc, const char* argv[]) {
           std::cerr << cv->getErrors() << std::endl;
           return -1;
   }
+  std::cout << "STARTING CODEGEN" << std::endl;
 
-  //// // Print out the module contents.
+  ////// // Print out the module contents.
   llvm::Module *module = cv->getModule();
   std::cout << std::endl << std::endl;
   //if (printOutput) {
           cv->modPrint();
-  //}
-  //if(cv->hasErrors()){
-  //        std::cerr << cv->getErrors() << std::endl;
-  //        return -1;
-  //}
-
-  //// // Dump the code to an output file
-  if (!noCode) {
-          std::string irFileName;
-          if (outputFileName != "-") {
-        	  irFileName = outputFileName;
-          } else {
-        	  irFileName = inputFileName.substr(0,inputFileName.find_last_of('.'))+".ll";
-          }
-          std::error_code ec;
-          llvm::raw_fd_ostream irFileStream(irFileName, ec);
-          module->print(irFileStream, nullptr);
-          irFileStream.flush();
+  ////}
+  if(cv->hasErrors()){
+          std::cerr << cv->getErrors() << std::endl;
+          return -1;
   }
+
+  ////// // Dump the code to an output file
+  //if (!noCode) {
+  //        std::string irFileName;
+  //        if (outputFileName != "-") {
+  //      	  irFileName = outputFileName;
+  //        } else {
+  //      	  irFileName = inputFileName.substr(0,inputFileName.find_last_of('.'))+".ll";
+  //        }
+  //        std::error_code ec;
+  //        llvm::raw_fd_ostream irFileStream(irFileName, ec);
+  //        module->print(irFileStream, nullptr);
+  //        irFileStream.flush();
+  //}
 
   return 0;
 }

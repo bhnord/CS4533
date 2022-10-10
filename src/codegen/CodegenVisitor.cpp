@@ -259,19 +259,22 @@ std::any CodegenVisitor::visitFuncHeader(WPLParser::FuncHeaderContext *ctx){
 	FunctionType *funcType = nullptr;
 
 	std::vector<Type *> *types = new std::vector<Type*>;
-	
-		std::vector<Param*> *params = sym->params;
-	for(Param *param: *params){
+
+	std::vector<Param*> *params = nullptr;
+	if(sym->params != nullptr){
+		params = sym->params;
+		for(Param *param: *params){
 			if(SymBaseType::INT == param->baseType || SymBaseType::BOOL == param->baseType){
 				types->push_back(CodegenVisitor::Int32Ty);
 			} else {
 				types->push_back(CodegenVisitor::Int8PtrPtrTy);
 			}
+		}
 	}
 	if(sym->baseType == INT || sym->baseType == BOOL){
 		funcType = FunctionType::get(CodegenVisitor::Int32Ty, *types,false);
 	}else{ //string
-       //	funcType = FunctionType::get(CodegenVisitor::Int8PtrPtrTy, {CodegenVisitor::Int32Ty, CodegenVisitor::Int8PtrPtrTy}, false); 
+	       //	funcType = FunctionType::get(CodegenVisitor::Int8PtrPtrTy, {CodegenVisitor::Int32Ty, CodegenVisitor::Int8PtrPtrTy}, false); 
 	}
 	Function *func = Function::Create(funcType, Function::ExternalLinkage, sym->id, module);
 

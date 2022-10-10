@@ -1,6 +1,4 @@
-int k <- 4;
-int func t(int k, boolean s){
-	boolean s <- false;
+int func t(){
 	return 4;
 }
 

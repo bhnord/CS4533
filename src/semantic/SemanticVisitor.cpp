@@ -67,7 +67,7 @@ std::any SemanticVisitor::visitFuncHeader(WPLParser::FuncHeaderContext *ctx) {
 	}
 	Symbol *sym = new Symbol(id, type, params);
 	Symbol *symbol = stmgr->addSymbol(sym); // global scope
-	bindings->bind(ctx, symbol);
+	bindings->bind(ctx, sym);
 	if (symbol == nullptr) {
 		errors.addSemanticError(ctx -> getStart(), "Duplicate variable: " + id);
 	}
