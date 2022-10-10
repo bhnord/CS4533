@@ -1,20 +1,4 @@
-ParenExpr + 
-UnaryMinus +
-UnaryNot +
-EqExpr+
-multExpr
-addExpr, relExpr
-IdExpr
-SubscirptExpr --> do in arrayIndex
-AndExpr
-ID Expr
-OrExpr
-ArrayLengthExpr
-ConstantExpr
-visitArrayDeclaration
 arrayIndex 			<-- do you need to check length
-loop
-conditional
 procHeader (basically just copy function) <-- check this
 proc (exit scope of procheader)
 externProcHeader, externFuncHeader
@@ -31,25 +15,11 @@ need: --------------------------------------------------------
 
 
 do not need-----------
-cuComponent
-varDeclaration
-varInitializer
-arguments
-return
-visitScalar <--- done in visitScalarDeclaration
 
 
 
 create bindings in assignment, declaration, 
 
-
-call is just a rule for recognizing an id and set of arguments -- statment
-x(1,2); -- does not return anything
--- should not accept expressions
-
-
-how to handle ors in grammar
-----> find in latest office hours --> watch video
 
 check multiple declaration!!!!!!!!!!!!!
 
@@ -61,3 +31,10 @@ add return checking on semantic analysis
 
 
 do we need bindings on param?
+
+
+
+
+
+  calculator -o myexprs.ll myexprs.cl
+  clang -o myexprs myexprs.ll

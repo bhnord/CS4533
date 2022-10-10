@@ -53,6 +53,7 @@ std::any CodegenVisitor::visitConstant(WPLParser::ConstantContext *ctx){
 			v = builder->getInt32(0);
 		}
 	} ///STILL NEED TO DO STRING!!
+	v = builder->getInt32(0);
 	return v;
 
 
@@ -174,7 +175,7 @@ std::any CodegenVisitor::visitEqExpr(WPLParser::EqExprContext *ctx){
 		v1 = builder->CreateICmpNE(lVal, rVal);
 	}
 
-	v = builder->CreateZExtOrTrunc(v1, CodegenVisitor::Int32Ty);
+	v = builder->CreateZExtOrTrunc(v1, Int32Ty);
 	return v;
 }
 
@@ -253,7 +254,7 @@ std::any CodegenVisitor::visitArrayLengthExpr(WPLParser::ArrayLengthExprContext 
 	return v;
 }
 
-
+//somehow set params in memory
 std::any CodegenVisitor::visitFuncHeader(WPLParser::FuncHeaderContext *ctx){
 	Symbol * sym = props->getBinding(ctx);
 	FunctionType *funcType = nullptr;
@@ -290,13 +291,14 @@ std::any CodegenVisitor::visitFuncHeader(WPLParser::FuncHeaderContext *ctx){
 std::any CodegenVisitor::visitBlock(WPLParser::BlockContext *ctx){
 	Function *theFunc = builder->GetInsertBlock()->getParent();
 	BasicBlock *back = builder->GetInsertBlock();
-	BasicBlock *bBlock = BasicBlock::Create(*context, "entry", theFunc);
+	BasicBlock *bBlock = BasicBlock::Create(*context, "block", theFunc);
 
 	//PROBABLY TAKE OUT CREATEBR
 	builder->SetInsertPoint(bBlock);
 	this->visitChildren(ctx);
+	//builder->CreateBr(back);
 
-	builder->SetInsertPoint(back);
+	//builder->SetInsertPoint(back);
 	return bBlock;
 }
 
@@ -305,7 +307,6 @@ std::any CodegenVisitor::visitBlock(WPLParser::BlockContext *ctx){
 //NEED TO ENSURE RETURN STATEMENT!!!!!!!!!!!!!
 std::any CodegenVisitor::visitFunction(WPLParser::FunctionContext *ctx){
 	BasicBlock *main = builder->GetInsertBlock();
-	ctx->fh->accept(this);
 	Function *func = std::any_cast<Function *>(ctx->fh->accept(this));
 	BasicBlock *bBlock = BasicBlock::Create(*context, ctx->fh->id->getText() + "head", func);
 
@@ -314,6 +315,7 @@ std::any CodegenVisitor::visitFunction(WPLParser::FunctionContext *ctx){
 	BasicBlock *b = std::any_cast<BasicBlock *>(ctx->b->accept(this));
 	//ret is created inside block
 
+	builder->SetInsertPoint(bBlock);
 	builder->CreateBr(b);
 	////EVENTUALLY REMOVE THIS !!!!!!!!
 
@@ -330,6 +332,9 @@ std::any CodegenVisitor::visitReturn(WPLParser::ReturnContext *ctx){
 }
 
 
+
+
+//call to function 
 std::any CodegenVisitor::visitCall(WPLParser::CallContext *ctx){
 	Symbol *s = props->getBinding(ctx);
 	Function *func = s->func;
@@ -341,3 +346,52 @@ std::any CodegenVisitor::visitCall(WPLParser::CallContext *ctx){
 	builder->CreateCall(func, *args); 
 	return nullptr;
 }
+
+
+std::any CodegenVisitor::visitConditional(WPLParser::ConditionalContext *ctx){
+	Value *cond = std::any_cast<Value *>(ctx->e->accept(this));
+
+
+       //blocks and setup
+        Function *theFunc = builder->GetInsertBlock()->getParent();
+        BasicBlock *currBlock = builder->GetInsertBlock();
+	BasicBlock *tBlock = BasicBlock::Create(*context, "then", theFunc);
+        BasicBlock *endBlock = BasicBlock::Create(*context, "cont", theFunc);
+	BasicBlock *eBlock = nullptr;
+
+
+	Value *t = builder->CreateICmpEQ(cond, builder->getInt32(1));
+	if(ctx->b.size() > 1){
+		BasicBlock *eBlock = BasicBlock::Create(*context, "else", theFunc);
+
+		builder->CreateCondBr(t, tBlock, eBlock);
+
+		//else block
+		builder->SetInsertPoint(eBlock);
+		BasicBlock *eb = std::any_cast<BasicBlock *>(ctx->b[1]->accept(this));
+		builder->CreateBr(endBlock);
+		builder->SetInsertPoint(eBlock);
+		builder->CreateBr(eb);
+
+	} else {
+		builder->CreateCondBr(t, tBlock, endBlock);
+	}
+
+	//then block
+	builder->SetInsertPoint(tBlock);
+	BasicBlock *tb = std::any_cast<BasicBlock *>(ctx->b[0]->accept(this));
+	builder->CreateBr(endBlock);
+	builder->SetInsertPoint(tBlock);
+	builder->CreateBr(tb);
+
+
+	//      //endblock
+	builder->SetInsertPoint(endBlock);
+
+
+	return nullptr;
+
+}
+
+
+

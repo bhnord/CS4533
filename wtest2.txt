@@ -1,4 +1,10 @@
 int func t(int k, int v){
+	boolean s <- false;
+	if s {
+		int k <- 4;
+	} else {
+		int x <- 18;
+	}
 	return 4;
 }
 
