@@ -6,8 +6,8 @@ grammar WPL;
 // Parser rules
 compilationUnit   : e+=cuComponent+ EOF;
 
-////TAKE OUT EXPR FROM CUCOMPONENT!!!!!!!!!!!!!!!!!!!
-cuComponent       : expr| varDeclaration | procedure | function | externDeclaration ;
+////TAKE OUT EXPR  and  statement FROM CUCOMPONENT!!!!!!!!!!!!!!!!!!!
+cuComponent       : expr | statement| varDeclaration | procedure | function | externDeclaration ;
 varDeclaration    : scalarDeclaration | arrayDeclaration ;
 scalarDeclaration : (t=type| VAR) scalars+=scalar (',' scalars+=scalar)* ';' ;
 scalar            : id=ID v=varInitializer? ;
@@ -19,7 +19,7 @@ externDeclaration : 'extern' (externProcHeader | externFuncHeader) ';';
 procedure         : procHeader block ;
 procHeader        : 'proc' id=ID '(' p=params? ')' ;
 externProcHeader  : 'proc' id=ID '(' ((p=params ',' ELLIPSIS) | p=params? | ELLIPSIS?) ')' ;
-function          : fh=funcHeader block  ;
+function          : fh=funcHeader b=block  ;
 funcHeader        : t=type 'func' id=ID '(' p=params? ')' ;
 externFuncHeader  : t=type 'func' id=ID '(' ((p=params ',' ELLIPSIS) | p=params? | ELLIPSIS?) ')' ;
 
@@ -27,7 +27,7 @@ params            : (p+=param (',' p+=param)*) ;
 param		  : t=type id=ID;
 
 ///
-block            : '{' (statement | varDeclaration | block)+ '}' ;   // Change to expr ???
+block            : '{' (s+=statement | varDeclaration | block)+ '}' ;   // Change to expr ???
 
 statement         : assignment
                   | loop
@@ -35,7 +35,7 @@ statement         : assignment
                   | conditional
                   | call
                   | block
-                  | return
+                  | r=return
                   ;
 
 loop              : 'while' e=expr 'do' b=block ;
@@ -45,7 +45,7 @@ selectAlt         : e=expr ':' s=statement ;
 call              : id=ID '(' a=arguments? ')' ';' ;
 arguments         : (a+=arg (',' a+=arg)*) ;  
 arg               : (id=ID | c=constant) ; 
-return            : 'return' expr? ';' ;
+return            : 'return' ex=expr? ';' ;
 
 constant          : i=INTEGER | s=STRING | b=BOOLEAN ;
 assignment        : target=ID '<-' e=expr ';' 

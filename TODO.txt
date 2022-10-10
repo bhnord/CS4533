@@ -52,3 +52,9 @@ how to handle ors in grammar
 ----> find in latest office hours --> watch video
 
 check multiple declaration!!!!!!!!!!!!!
+
+
+
+
+-----------------
+add return checking on semantic analysis

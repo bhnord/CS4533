@@ -11,7 +11,7 @@ include(Semantic)
 include(Symbol)
 include(Codegen)
 include(LLVM)
-# include(Runtime)
+#include(Runtime)
 
 ####################################################################
 # See: https://cmake.org/cmake/help/latest/command/find_package.html
@@ -32,7 +32,7 @@ add_subdirectory(symbol)
 add_subdirectory(semantic)
 add_subdirectory(utility)
 add_subdirectory(codegen)
-# add_subdirectory(runtime)
+#add_subdirectory(runtime)
 
 add_executable(wplc wplc.cpp)
 
@@ -51,7 +51,7 @@ add_dependencies(wplc
 	semantic_lib
   utility_lib
   codegen_lib
-#   wpl_runtime
+  #   wpl_runtime
 )
 
 target_include_directories(wplc PUBLIC 
@@ -71,9 +71,9 @@ target_link_libraries(wplc
   sym_lib
   semantic_lib
   utility_lib
-   ${LLVM_LIBS}
+  # ${LLVM_LIBS}
   codegen_lib
-  #${LLVM_LIBS}
+  ${LLVM_LIBS}
 )
 
 

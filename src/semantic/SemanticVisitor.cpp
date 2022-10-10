@@ -67,6 +67,7 @@ std::any SemanticVisitor::visitFuncHeader(WPLParser::FuncHeaderContext *ctx) {
 	}
 	Symbol *sym = new Symbol(id, type, params);
 	Symbol *symbol = stmgr->addSymbol(sym); // global scope
+	bindings->bind(ctx, symbol);
 	if (symbol == nullptr) {
 		errors.addSemanticError(ctx -> getStart(), "Duplicate variable: " + id);
 	}
@@ -86,6 +87,17 @@ std::any SemanticVisitor::visitFuncHeader(WPLParser::FuncHeaderContext *ctx) {
 std::any SemanticVisitor::visitFunction(WPLParser::FunctionContext *ctx){
 	this->visitChildren(ctx);
 	stmgr->exitScope(); // entered in the header
+
+	if(ctx->b->s.size() != 0){
+	WPLParser::StatementContext *s = ctx->b->s[ctx->b->s.size()-1];
+	
+	if(s != nullptr){
+		if(s->r != nullptr){
+			return nullptr;
+		}
+	}
+	}
+	errors.addSemanticError(ctx -> getStart(), "No return as last in function: ");
 	return nullptr;
 }
 

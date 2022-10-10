@@ -1,4 +1,6 @@
-int s <- 3, t<-true, n;
-int func s(){
-int k <- 3;
+int k <- 4;
+int func t(int k, boolean s){
+	boolean s <- false;
+	return 4;
 }
+

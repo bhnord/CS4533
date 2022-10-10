@@ -54,7 +54,7 @@ class  CodegenVisitor: public WPLBaseVisitor {
 
 		std::any visitScalarDeclaration(WPLParser::ScalarDeclarationContext *ctx) override;
 
-		//  std::any visitScalar(WPLParser::ScalarContext *ctx) override;
+		std::any visitScalar(WPLParser::ScalarContext *ctx) override;
 
 		//  std::any visitArrayDeclaration(WPLParser::ArrayDeclarationContext *ctx) override;
 
@@ -70,9 +70,9 @@ class  CodegenVisitor: public WPLBaseVisitor {
 
 		//  std::any visitExternProcHeader(WPLParser::ExternProcHeaderContext *ctx) override;
 
-		//  std::any visitFunction(WPLParser::FunctionContext *ctx) override;
+		std::any visitFunction(WPLParser::FunctionContext *ctx) override;
 
-		//  std::any visitFuncHeader(WPLParser::FuncHeaderContext *ctx) override;
+		 std::any visitFuncHeader(WPLParser::FuncHeaderContext *ctx) override;
 
 		//  std::any visitExternFuncHeader(WPLParser::ExternFuncHeaderContext *ctx) override;
 
@@ -80,7 +80,7 @@ class  CodegenVisitor: public WPLBaseVisitor {
 
 		//  std::any visitParam(WPLParser::ParamContext *ctx) override;
 
-		//  std::any visitBlock(WPLParser::BlockContext *ctx) override;
+		std::any visitBlock(WPLParser::BlockContext *ctx) override;
 
 		//  std::any visitStatement(WPLParser::StatementContext *ctx) override;
 
@@ -92,13 +92,13 @@ class  CodegenVisitor: public WPLBaseVisitor {
 
 		//  std::any visitSelectAlt(WPLParser::SelectAltContext *ctx) override;
 
-		//  std::any visitCall(WPLParser::CallContext *ctx) override;
+		std::any visitCall(WPLParser::CallContext *ctx) override;
 
 		//  std::any visitArguments(WPLParser::ArgumentsContext *ctx) override;
 
 		//  std::any visitArg(WPLParser::ArgContext *ctx) override;
 
-		//  std::any visitReturn(WPLParser::ReturnContext *ctx) override;
+		std::any visitReturn(WPLParser::ReturnContext *ctx) override;
 
 		std::any visitConstant(WPLParser::ConstantContext *ctx) override;
 
@@ -106,7 +106,7 @@ class  CodegenVisitor: public WPLBaseVisitor {
 
 		//  std::any visitArrayIndex(WPLParser::ArrayIndexContext *ctx) override;
 
-		//  std::any visitAndExpr(WPLParser::AndExprContext *ctx) override;
+		std::any visitAndExpr(WPLParser::AndExprContext *ctx) override;
 
 		std::any visitIDExpr(WPLParser::IDExprContext *ctx) override;
 
@@ -116,15 +116,15 @@ class  CodegenVisitor: public WPLBaseVisitor {
 
 		std::any visitRelExpr(WPLParser::RelExprContext *ctx) override;
 
-		//  std::any visitMultExpr(WPLParser::MultExprContext *ctx) override;
+		std::any visitMultExpr(WPLParser::MultExprContext *ctx) override;
 
 		std::any visitUnaryNotExpr(WPLParser::UnaryNotExprContext *ctx) override;
 
-		//  std::any visitAddExpr(WPLParser::AddExprContext *ctx) override;
+		std::any visitAddExpr(WPLParser::AddExprContext *ctx) override;
 
-		//  std::any visitArrayLengthExpr(WPLParser::ArrayLengthExprContext *ctx) override;
+		std::any visitArrayLengthExpr(WPLParser::ArrayLengthExprContext *ctx) override;
 
-		//  std::any visitOrExpr(WPLParser::OrExprContext *ctx) override;
+		std::any visitOrExpr(WPLParser::OrExprContext *ctx) override;
 
 		std::any visitEqExpr(WPLParser::EqExprContext *ctx) override;
 

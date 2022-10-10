@@ -31,6 +31,7 @@ struct Symbol
 	SymBaseType baseType;
 	bool defined=false;
 	llvm::Value *val=nullptr;
+	llvm::Function *func= nullptr;
 
 	////
 	SymType retType;
