@@ -64,9 +64,9 @@ class  CodegenVisitor: public WPLBaseVisitor {
 
 		//  std::any visitExternDeclaration(WPLParser::ExternDeclarationContext *ctx) override;
 
-		//  std::any visitProcedure(WPLParser::ProcedureContext *ctx) override;
+		std::any visitProcedure(WPLParser::ProcedureContext *ctx) override;
 
-		//  std::any visitProcHeader(WPLParser::ProcHeaderContext *ctx) override;
+		std::any visitProcHeader(WPLParser::ProcHeaderContext *ctx) override;
 
 		//  std::any visitExternProcHeader(WPLParser::ExternProcHeaderContext *ctx) override;
 

@@ -34,6 +34,8 @@ do we need bindings on param?
 
 
 
+MAKE IT SO THAT RETURN TYPES ARE THE SAME AS FUNCTION THAT CALLED THEM.
+MAKE IT SO THAT "RETURN" WITH NO EXPR IS OKAY.
 
 
   calculator -o myexprs.ll myexprs.cl

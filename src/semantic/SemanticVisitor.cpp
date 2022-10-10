@@ -113,6 +113,7 @@ std::any SemanticVisitor::visitProcHeader(WPLParser::ProcHeaderContext *ctx){
 	}
 	Symbol *sym = new Symbol(id, params);
 	Symbol *symbol = stmgr->addSymbol(sym); // global scope
+	bindings->bind(ctx, sym);
 	if (symbol == nullptr) {
 		errors.addSemanticError(ctx -> getStart(), "Duplicate variable: " + id);
 	}

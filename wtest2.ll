@@ -8,7 +8,7 @@ entry:
   ret i32 0
 }
 
-define i32 @t(i32 %k, i32 %v) {
+define void @t(i32 %k, i32 %v) {
 thead:
   br label %block
 

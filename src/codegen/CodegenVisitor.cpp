@@ -254,6 +254,60 @@ std::any CodegenVisitor::visitArrayLengthExpr(WPLParser::ArrayLengthExprContext 
 	return v;
 }
 
+//create procedure
+std::any CodegenVisitor::visitProcedure(WPLParser::ProcedureContext *ctx) {
+        BasicBlock *main = builder->GetInsertBlock();
+        Function *proc = std::any_cast<Function *>(ctx->ph->accept(this));
+        BasicBlock *bBlock = BasicBlock::Create(*context, ctx->ph->id->getText() + "head", proc);
+
+
+        builder->SetInsertPoint(bBlock);
+        BasicBlock *b = std::any_cast<BasicBlock *>(ctx->b->accept(this));
+        //ret is created inside block
+
+        builder->SetInsertPoint(bBlock);
+        builder->CreateBr(b);
+        ////EVENTUALLY REMOVE THIS !!!!!!!!
+
+        builder->SetInsertPoint(main);
+
+        return nullptr;
+	
+}
+
+//procedure header and func setup
+std::any CodegenVisitor::visitProcHeader(WPLParser::ProcHeaderContext *ctx){
+	Symbol * sym = props->getBinding(ctx);
+
+	std::vector<Type *> *types = new std::vector<Type*>;
+
+	std::vector<Param*> *params = nullptr;
+	if(sym->params != nullptr){
+		params = sym->params;
+		for(Param *param: *params){
+			if(SymBaseType::INT == param->baseType || SymBaseType::BOOL == param->baseType){
+				types->push_back(CodegenVisitor::Int32Ty);
+			} else {
+				types->push_back(CodegenVisitor::Int8PtrPtrTy);
+			}
+		}
+	}
+
+
+	FunctionType *funcType = FunctionType::get(CodegenVisitor::VoidTy, *types,false);
+	Function *func = Function::Create(funcType, Function::ExternalLinkage, sym->id, module);
+
+	sym->func = func;
+	unsigned Idx = 0;
+	for (auto &Arg : func->args())
+		Arg.setName(((*(sym->params))[Idx++])->id);
+
+
+
+	return func;
+}
+
+
 //somehow set params in memory
 std::any CodegenVisitor::visitFuncHeader(WPLParser::FuncHeaderContext *ctx){
 	Symbol * sym = props->getBinding(ctx);
@@ -317,7 +371,6 @@ std::any CodegenVisitor::visitFunction(WPLParser::FunctionContext *ctx){
 
 	builder->SetInsertPoint(bBlock);
 	builder->CreateBr(b);
-	////EVENTUALLY REMOVE THIS !!!!!!!!
 
 	builder->SetInsertPoint(main);
 
