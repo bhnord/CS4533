@@ -7,3 +7,7 @@ int main(){
 	printf("PRINTING OUTPUT: \n%d\n", c(1));
 
 }
+
+int test(){
+	return -55;
+}

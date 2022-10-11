@@ -1,6 +1,8 @@
-int k <- 0;
-int func c(int f){
-	var r;
-	r <- (3+5);
-	return r;
+str glob <- "helloGlob";
+int func t1(){
+	str test <- "hello";
+	return 4;
+}
+int func c(int k){
+	return 5;
 }

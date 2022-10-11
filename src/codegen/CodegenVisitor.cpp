@@ -79,28 +79,53 @@ std::any CodegenVisitor::visitScalar(WPLParser::ScalarContext *ctx){
 	Value *exVal = nullptr;
 
 	//globals
-
-	bool inFunc = builder->GetInsertBlock() != nullptr;
-
-	if(ctx->v != nullptr)
-		exVal =  std::any_cast<Value *>(ctx->v->accept(this));
-	else
-		exVal = builder->getInt32(0);
 	Symbol *varSymbol = props->getBinding(ctx);  // child variable symbol
 	if (varSymbol == nullptr) {
 		errors.addCodegenError(ctx->getStart(), "Undefined variable in expression: " + ctx->id->getText());
 	}
+
+	bool inFunc = builder->GetInsertBlock() != nullptr;
+
+	if(ctx->v != nullptr){
+		if(varSymbol->baseType != SymBaseType::STR)
+			exVal =  std::any_cast<Value *>(ctx->v->accept(this));
+		else {
+			std::string s = ctx->v->c->s->getText();
+			s.erase(s.size()-1, 1).erase(0, 1); //remove " " part of string
+			StringRef str = s;
+			exVal = builder->CreateGlobalStringPtr(str, ctx->id->getText());
+		}
+	}
+	else{ //FIGURE OUT HOW TO ALLOC EMPTY STRING!!!! ----------------------------------------------
+		if(varSymbol->baseType != SymBaseType::STR)
+			exVal = builder->getInt32(0);
+	}
 	// Define the symbol and allocate memory.
-	if(!inFunc){
+	if(!inFunc && varSymbol->baseType != SymBaseType::STR){
 		module->getOrInsertGlobal(varSymbol->id, CodegenVisitor::Int32Ty);
 		GlobalVariable *g = module->getNamedGlobal(varSymbol->id);
 		g->setLinkage(GlobalValue::CommonLinkage);
 		g->setInitializer(Int32Zero);
 		g->setAlignment(Align(4));
 		v = g;
-	} else {
-		v = builder->CreateAlloca(CodegenVisitor::Int32Ty, 0, varSymbol->id);
+	}else if(!inFunc){ //work on global strings!!!!!
+		module->getOrInsertGlobal(varSymbol->id, CodegenVisitor::i8p);
+		GlobalVariable *g = module->getNamedGlobal(varSymbol->id);
+		g->setLinkage(GlobalValue::CommonLinkage);
+		//g->setInitializer(Int32Zero);
+		g->setAlignment(Align(8));
+		v = g;
+	
+	}	
+	else {
+		if(varSymbol->baseType != SymBaseType::STR)
+			v = builder->CreateAlloca(CodegenVisitor::Int32Ty, 0, varSymbol->id);
+		else
+
+			v = builder->CreateAlloca(CodegenVisitor::i8p, 0, varSymbol->id);  
+
 	}
+
 	varSymbol->val = v;
 	if(inFunc)
 		builder->CreateStore(exVal, v);
@@ -110,7 +135,8 @@ std::any CodegenVisitor::visitScalar(WPLParser::ScalarContext *ctx){
 }
 
 std::any CodegenVisitor::visitScalarDeclaration(WPLParser::ScalarDeclarationContext *ctx){
-	return ctx->scalars[0]->accept(this);
+	this->visitChildren(ctx);
+	return nullptr;
 }
 
 //eventually fix below!!! (does not work1!!)----------------------------------
