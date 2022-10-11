@@ -1,7 +1,5 @@
-int func t1(){
-	str test;
-	return 4;
-}
+boolean b <- false;
+int ss <- 999;
 str func c(str n){
 return n;
 }

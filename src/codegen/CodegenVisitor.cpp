@@ -84,13 +84,14 @@ std::any CodegenVisitor::visitIDExpr(WPLParser::IDExprContext *ctx){
 
 
 std::any CodegenVisitor::visitScalar(WPLParser::ScalarContext *ctx){
-	Value *v = nullptr;
-	Value *exVal = nullptr;
+      Value *v = nullptr;
+      Value *exVal = nullptr;
 
 	//globals
 	Symbol *varSymbol = props->getBinding(ctx);  // child variable symbol
 	if (varSymbol == nullptr) {
 		errors.addCodegenError(ctx->getStart(), "Undefined variable in expression: " + ctx->id->getText());
+		return -1;
 	}
 
 	bool inFunc = builder->GetInsertBlock() != nullptr;
@@ -115,22 +116,45 @@ std::any CodegenVisitor::visitScalar(WPLParser::ScalarContext *ctx){
 		}
 	}
 	// Define the symbol and allocate memory.
+	// testhere
+	
+//allocate memory for global type
 	if(!inFunc && varSymbol->baseType != SymBaseType::STR){
+		
 		module->getOrInsertGlobal(varSymbol->id, CodegenVisitor::Int32Ty);
 		GlobalVariable *g = module->getNamedGlobal(varSymbol->id);
 		g->setLinkage(GlobalValue::CommonLinkage);
-		g->setInitializer(Int32Zero);
+		if(ctx->v != nullptr){
+			Constant *c = nullptr;
+
+			//int initialization
+			if(ctx->v->c->i != nullptr)
+				c = ConstantInt::get(Int32Ty, stoi(ctx->v->c->i->getText()), true);
+			else if(ctx->v->c->b != nullptr){
+				if(ctx->v->c->b->getText() == "true")
+					c = Int32One;
+				else 
+					c = Int32Zero;
+			}
+			g->setInitializer(c);
+		}
+		else 
+			g->setInitializer(Int32Zero);
 		g->setAlignment(Align(4));
 		v = g;
 	}else if(!inFunc){ //work on global strings!!!!-----------------------------------------------------------------------!
-
-		v=exVal;
+		module->getOrInsertGlobal(varSymbol->id, CodegenVisitor::i8p);
+		GlobalVariable *g = module->getNamedGlobal(varSymbol->id);
+		g->setLinkage(GlobalValue::CommonLinkage);
+		//g->setInitializer(nullptr);
+		g->setAlignment(Align(8));
+		v = g;
+		//	init with global var
 	}	
 	else {
 		if(varSymbol->baseType != SymBaseType::STR)
 			v = builder->CreateAlloca(CodegenVisitor::Int32Ty, 0, varSymbol->id);
 		else
-
 			v = builder->CreateAlloca(CodegenVisitor::i8p, 0, varSymbol->id);  
 
 	}

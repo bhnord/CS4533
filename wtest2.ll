@@ -1,17 +1,8 @@
 ; ModuleID = 'WPLC.ll'
 source_filename = "WPLC.ll"
 
-@test = private unnamed_addr constant [1 x i8] zeroinitializer, align 1
-
-define i32 @t1() {
-t1head:
-  br label %enter
-
-enter:                                            ; preds = %t1head
-  %test = alloca i8*, align 8
-  store i8* getelementptr inbounds ([1 x i8], [1 x i8]* @test, i32 0, i32 0), i8** %test, align 8
-  ret i32 4
-}
+@b = common global i32 0, align 4
+@ss = common global i32 999, align 4
 
 define i8* @c(i8* %n) {
 chead:
