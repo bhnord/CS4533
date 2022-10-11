@@ -41,8 +41,8 @@ do we need bindings on param?
 
 
 
+IMPLEMENT STRINGS WITH NO ASSIGNMENT, IMPLEMENT GLOBAL STRINGS
 
-implement Strings -- declaratoin, assignment!!!!!!
 implement Arrays -- declaration, assignment, length!!!!!!
 
 

@@ -1,6 +1,5 @@
 int func t1(){
-	str test <- "hello";
-	test <- "2nd thing";
+	str test;
 	return 4;
 }
 str func c(str n){

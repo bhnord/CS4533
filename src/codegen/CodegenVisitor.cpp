@@ -105,9 +105,14 @@ std::any CodegenVisitor::visitScalar(WPLParser::ScalarContext *ctx){
 			exVal = builder->CreateGlobalStringPtr(str, ctx->id->getText());
 		}
 	}
-	else{ //FIGURE OUT HOW TO ALLOC EMPTY STRING!!!! ----------------------------------------------
+	else{ 
 		if(varSymbol->baseType != SymBaseType::STR)
 			exVal = builder->getInt32(0);
+		else{ //----------------------------------------------------------------------FIX THIS
+			//initialize with empty string
+                        StringRef str = "";
+                        exVal = builder->CreateGlobalStringPtr(str, ctx->id->getText());
+		}
 	}
 	// Define the symbol and allocate memory.
 	if(!inFunc && varSymbol->baseType != SymBaseType::STR){
