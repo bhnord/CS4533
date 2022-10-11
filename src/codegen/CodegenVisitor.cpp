@@ -54,7 +54,13 @@ std::any CodegenVisitor::visitConstant(WPLParser::ConstantContext *ctx){
 		} else {
 			v = builder->getInt32(0);
 		}
-	} ///STILL NEED TO DO STRING!!
+	} else {
+		std::string s = ctx->s->getText();
+		s.erase(s.size()-1, 1).erase(0, 1); //remove " " part of string
+		StringRef str = s;
+		v = builder->CreateGlobalStringPtr(str, "const");
+		
+	}///STILL NEED TO DO STRING!!
 	return v;
 
 
@@ -108,7 +114,7 @@ std::any CodegenVisitor::visitScalar(WPLParser::ScalarContext *ctx){
 		g->setInitializer(Int32Zero);
 		g->setAlignment(Align(4));
 		v = g;
-	}else if(!inFunc){ //work on global strings!!!!!
+	}else if(!inFunc){ //work on global strings!!!!-----------------------------------------------------------------------!
 		module->getOrInsertGlobal(varSymbol->id, CodegenVisitor::i8p);
 		GlobalVariable *g = module->getNamedGlobal(varSymbol->id);
 		g->setLinkage(GlobalValue::CommonLinkage);

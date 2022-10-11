@@ -1,8 +1,8 @@
-str glob <- "helloGlob";
 int func t1(){
 	str test <- "hello";
+	test <- "2nd thing";
 	return 4;
 }
-int func c(int k){
-	return 5;
+str func c(str k){
+	return k;
 }
