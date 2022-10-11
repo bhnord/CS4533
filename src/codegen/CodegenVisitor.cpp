@@ -594,3 +594,16 @@ std::any CodegenVisitor::visitExternProcHeader(WPLParser::ExternProcHeaderContex
 
 	return nullptr;
 }
+
+
+std::any CodegenVisitor::visitFuncCallExpr(WPLParser::FuncCallExprContext *ctx){
+        Symbol *s = props->getBinding(ctx);
+        Function *func = s->func;
+	std::vector<Value *> *args = new std::vector<Value *>;
+	for(WPLParser::ExprContext *a : ctx->args){
+		Value *v = std::any_cast<Value *>(a->accept(this));
+		args->push_back(v);
+	}
+	Value *val = builder->CreateCall(func, *args);
+	return val;
+}	

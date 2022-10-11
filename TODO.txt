@@ -43,11 +43,10 @@ MAKE IT SO THAT "RETURN" WITH NO EXPR IS OKAY.
 
 check return in Semantics
 implement var variable
-implement function, proc call
 fix proc visitor
+	--> what? 
 implement Strings -- declaratoin, assignment!!!!!!
 implement Arrays -- declaration, assignment, length!!!!!!
-implement extern functions 
 implement select
 implement loop
 

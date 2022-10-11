@@ -130,7 +130,7 @@ class  CodegenVisitor: public WPLBaseVisitor {
 
 		std::any visitParenExpr(WPLParser::ParenExprContext *ctx) override;
 
-		//  std::any visitFuncCallExpr(WPLParser::FuncCallExprContext *ctx) override;
+		std::any visitFuncCallExpr(WPLParser::FuncCallExprContext *ctx) override;
 
 		std::any visitUnaryMinusExpr(WPLParser::UnaryMinusExprContext *ctx) override;
 
