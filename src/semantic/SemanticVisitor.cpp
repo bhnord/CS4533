@@ -18,7 +18,7 @@ std::any SemanticVisitor::visitScalarDeclaration(WPLParser::ScalarDeclarationCon
 		type = std::any_cast<SymBaseType>(ctx->t->accept(this));
 	} else {
 		type = UNDEFINED;
-		//FIGURE OUT VAR ASSIGNMENT
+		//VAR ASSIGNMENT
 	}
 
 	//get the variable name(s)
@@ -27,19 +27,27 @@ std::any SemanticVisitor::visitScalarDeclaration(WPLParser::ScalarDeclarationCon
 
 
 		//CHECK TYPE IF THERE IS DECLARATION
-		if(s->v !=nullptr){
-			SymBaseType sType = std::any_cast<SymBaseType>(s->v->accept(this));
-			if(sType != type){
+		SymBaseType sType = UNDEFINED;
+		bool isDef = s->v !=nullptr;
+		if(isDef){
+			sType = std::any_cast<SymBaseType>(s->v->accept(this));
+				
+			if(type != UNDEFINED && sType != type){
 				errors.addSemanticError(s->getStart(), "Incorrect type: " + id + " " + Symbol::getSymBaseTypeName(sType) + ", Expected " + Symbol::getSymBaseTypeName(type));
 			}
-		}
-		Symbol *sym = new Symbol(id, type);
+		} 
+		Symbol *sym = nullptr;
+		if(type == UNDEFINED)
+			sym = new Symbol(id, sType);
+		else
+			sym = new Symbol(id, type);
 		Symbol *symbol = stmgr->addSymbol(sym);
 		if(symbol == nullptr){
 			errors.addSemanticError(s->getStart(), "Duplicate variable: " + id);
 		} else {
 			//bindings
 			bindings->bind(s, symbol);
+			sym->defined = isDef;
 		}
 	}
 	return nullptr;
@@ -78,11 +86,12 @@ std::any SemanticVisitor::visitFuncHeader(WPLParser::FuncHeaderContext *ctx) {
 		for (Param *p : *params) {
 			Symbol *sym = new Symbol(p->id, p->baseType);
 			Symbol *symbol = stmgr->addSymbol(sym);
-
+			
 			if (symbol == nullptr) {
 				errors.addSemanticError(ctx -> getStart(), "Duplicate variable: " + id);
 			} else {
 				bindings->bind(ctx->p->p[pnum++], sym);
+				symbol->defined = true;
 			}	
 		}
 	}
@@ -138,12 +147,16 @@ std::any SemanticVisitor::visitProcHeader(WPLParser::ProcHeaderContext *ctx){
 	}
 	stmgr->enterScope(); // scope for the parameters
 	if (ctx -> p != nullptr) {
+		unsigned int pnum =0;
 		for (Param *p : *params) {
 			Symbol *sym = new Symbol(p->id, p->baseType);
 			Symbol *symbol = stmgr->addSymbol(sym);
 			if (symbol == nullptr) {
 				errors.addSemanticError(ctx -> getStart(), "Duplicate variable: " + id);
-			}
+			} else {
+                                bindings->bind(ctx->p->p[pnum++], sym);
+                                symbol->defined = true;
+                        }
 		}
 	}
 	return nullptr;
@@ -418,7 +431,7 @@ std::any SemanticVisitor::visitIDExpr(WPLParser::IDExprContext *ctx) {
 	SymBaseType t = SymBaseType::UNDEFINED;
 	std::string id = ctx -> id -> getText();
 	Symbol* symbol = stmgr-> findSymbol(id);
-	if(symbol != nullptr){
+	if(symbol != nullptr && symbol->defined){
 		bindings -> bind(ctx, symbol);
 		t = symbol->baseType;
 	} else {
@@ -431,19 +444,26 @@ std::any SemanticVisitor::visitIDExpr(WPLParser::IDExprContext *ctx) {
 std::any SemanticVisitor::visitAssignment(WPLParser::AssignmentContext *ctx){
 	SymBaseType right = std::any_cast<SymBaseType>(ctx->e->accept(this));
 
-	SymBaseType left  = SymBaseType::UNDEFINED;
+	SymBaseType left = SymBaseType::UNDEFINED;
 	std::string id = ctx -> target -> getText();
 	Symbol* symbol = stmgr-> findSymbol(id);
 	if(symbol != nullptr){
 		bindings -> bind(ctx, symbol);
+		symbol->defined = true;
 		left = symbol->baseType;
+
+		if(left == SymBaseType::UNDEFINED){
+			//VAR DECLARATION
+			symbol->baseType = right;
+		} else if(left != right){
+			errors.addSemanticError(ctx -> getStart(), "Type mismatch on assignment: " + Symbol::getSymBaseTypeName(left) + ", " + Symbol::getSymBaseTypeName(right));
+		}
+
+
 	} else {
 		errors.addSemanticError(ctx -> getStart(), "Use of undefined variable: " + id);
 	}
 
-	if(left != right){
-		errors.addSemanticError(ctx -> getStart(), "Type mismatch on assignment: " + Symbol::getSymBaseTypeName(left) + ", " + Symbol::getSymBaseTypeName(right));
-	}
 
 	return nullptr;
 }

@@ -80,35 +80,30 @@ std::any CodegenVisitor::visitScalar(WPLParser::ScalarContext *ctx){
 
 	//globals
 
-		bool inFunc = builder->GetInsertBlock() != nullptr;
+	bool inFunc = builder->GetInsertBlock() != nullptr;
 
-		if(ctx->v != nullptr)
-			exVal =  std::any_cast<Value *>(ctx->v->accept(this));
-		else
-			exVal = builder->getInt32(0);
-		Symbol *varSymbol = props->getBinding(ctx);  // child variable symbol
-		if (varSymbol == nullptr) {
-			errors.addCodegenError(ctx->getStart(), "Undefined variable in expression: " + ctx->id->getText());
-		}
-		if (!(varSymbol->defined)) {
-			// Define the symbol and allocate memory.
-			if(!inFunc){
-				module->getOrInsertGlobal(varSymbol->id, CodegenVisitor::Int32Ty);
-				GlobalVariable *g = module->getNamedGlobal(varSymbol->id);
-				g->setLinkage(GlobalValue::CommonLinkage);
-				g->setInitializer(Int32Zero);
-				g->setAlignment(Align(4));
-				v = g;
-			} else {
-				v = builder->CreateAlloca(CodegenVisitor::Int32Ty, 0, varSymbol->id);
-			}
-			varSymbol->defined = true;
-			varSymbol->val = v;
-		} else {
-			v = varSymbol->val;
-		}
-		if(inFunc)
-			builder->CreateStore(exVal, v);
+	if(ctx->v != nullptr)
+		exVal =  std::any_cast<Value *>(ctx->v->accept(this));
+	else
+		exVal = builder->getInt32(0);
+	Symbol *varSymbol = props->getBinding(ctx);  // child variable symbol
+	if (varSymbol == nullptr) {
+		errors.addCodegenError(ctx->getStart(), "Undefined variable in expression: " + ctx->id->getText());
+	}
+	// Define the symbol and allocate memory.
+	if(!inFunc){
+		module->getOrInsertGlobal(varSymbol->id, CodegenVisitor::Int32Ty);
+		GlobalVariable *g = module->getNamedGlobal(varSymbol->id);
+		g->setLinkage(GlobalValue::CommonLinkage);
+		g->setInitializer(Int32Zero);
+		g->setAlignment(Align(4));
+		v = g;
+	} else {
+		v = builder->CreateAlloca(CodegenVisitor::Int32Ty, 0, varSymbol->id);
+	}
+	varSymbol->val = v;
+	if(inFunc)
+		builder->CreateStore(exVal, v);
 
 
 	return exVal;

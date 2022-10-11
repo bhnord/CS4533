@@ -1,9 +1,6 @@
 int k <- 0;
 int func c(int f){
-	int i <- 0;
-	select {
-		i < 0: return -1;
-		i = 0: return 99;
-	}
-	return i; 
+	var r;
+	r <- (3+5);
+	return r;
 }

@@ -41,15 +41,13 @@ MAKE IT SO THAT "RETURN" WITH NO EXPR IS OKAY.
   calculator -o myexprs.ll myexprs.cl
   clang -o myexprs myexprs.ll
 
-implement var variable
-fix proc visitor
-	--> what? 
+
+
+
 implement Strings -- declaratoin, assignment!!!!!!
 implement Arrays -- declaration, assignment, length!!!!!!
 
 
-fix block <---- make not BasicBlock -- scope is checked in semantic
-implement select
 
 implement loop -- testme
 
