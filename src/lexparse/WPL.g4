@@ -40,7 +40,7 @@ statement         : assignment
 
 loop              : 'while' e=expr 'do' b=block ;
 conditional       : 'if' e=expr 'then'? b+=block ('else' b+=block)? ;
-select            : 'select' '{' selectAlt+ '}' ;
+select            : 'select' '{' s+=selectAlt+ '}' ;
 selectAlt         : e=expr ':' s=statement ;  
 call              : id=ID '(' a=arguments? ')' ';' ;
 arguments         : (a+=arg (',' a+=arg)*) ;  

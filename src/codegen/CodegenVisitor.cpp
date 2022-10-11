@@ -280,13 +280,16 @@ std::any CodegenVisitor::visitProcedure(WPLParser::ProcedureContext *ctx) {
 
 
 	builder->SetInsertPoint(bBlock);
-	BasicBlock *b = std::any_cast<BasicBlock *>(ctx->b->accept(this));
+
+	BasicBlock *ent = BasicBlock::Create(*context, "enter", proc);
+	builder->CreateBr(ent);
+
+	builder->SetInsertPoint(ent);
+
+	ctx->b->accept(this);
 	//ret can be created inside block
 	builder->CreateRet(nullptr);
 
-	builder->SetInsertPoint(bBlock);
-	builder->CreateBr(b);
-	////EVENTUALLY REMOVE THIS !!!!!!!!
 
 	builder->SetInsertPoint(main);
 
@@ -378,13 +381,17 @@ std::any CodegenVisitor::visitFuncHeader(WPLParser::FuncHeaderContext *ctx){
 
 //--------------- YOU ARE IN CHARGE OF GOING BACK!!
 std::any CodegenVisitor::visitBlock(WPLParser::BlockContext *ctx){
-	Function *theFunc = builder->GetInsertBlock()->getParent();
-	BasicBlock *bBlock = BasicBlock::Create(*context, "block", theFunc);
 
-	builder->SetInsertPoint(bBlock);
+	//there is no point to implement a basic block here!
+	//scoping is done in semantic analysis
+//	Function *theFunc = builder->GetInsertBlock()->getParent();
+//	BasicBlock *bBlock = BasicBlock::Create(*context, "block", theFunc);
+//
+//	builder->SetInsertPoint(bBlock);
 	this->visitChildren(ctx);
 
-	return bBlock;
+//	return bBlock;
+	return nullptr;
 }
 
 
@@ -401,11 +408,12 @@ std::any CodegenVisitor::visitFunction(WPLParser::FunctionContext *ctx){
 		ctx->fh->p->accept(this); //visit all params
 
 
-	BasicBlock *b = std::any_cast<BasicBlock *>(ctx->b->accept(this));
-	//ret is created inside block
+	BasicBlock *ent = BasicBlock::Create(*context, "enter", func);
+	builder->CreateBr(ent);
 
-	builder->SetInsertPoint(bBlock);
-	builder->CreateBr(b);
+	builder->SetInsertPoint(ent);
+	ctx->b->accept(this);
+	//ret is created inside block
 
 	builder->SetInsertPoint(main);
 
@@ -471,10 +479,8 @@ std::any CodegenVisitor::visitConditional(WPLParser::ConditionalContext *ctx){
 
 		//else block
 		builder->SetInsertPoint(eBlock);
-		BasicBlock *eb = std::any_cast<BasicBlock *>(ctx->b[1]->accept(this));
+		ctx->b[1]->accept(this);
 		builder->CreateBr(endBlock);
-		builder->SetInsertPoint(eBlock);
-		builder->CreateBr(eb);
 
 	} else {
 		builder->CreateCondBr(t, tBlock, endBlock);
@@ -482,10 +488,8 @@ std::any CodegenVisitor::visitConditional(WPLParser::ConditionalContext *ctx){
 
 	//then block
 	builder->SetInsertPoint(tBlock);
-	BasicBlock *tb = std::any_cast<BasicBlock *>(ctx->b[0]->accept(this));
+	ctx->b[0]->accept(this);
 	builder->CreateBr(endBlock);
-	builder->SetInsertPoint(tBlock);
-	builder->CreateBr(tb);
 
 
 	//      //endblock
@@ -610,21 +614,13 @@ std::any CodegenVisitor::visitLoop(WPLParser::LoopContext *ctx){
 
 	Function *theFunc = builder->GetInsertBlock()->getParent();
 
-	BasicBlock *currBlock = builder->GetInsertBlock();
-
 	BasicBlock *endBlock = BasicBlock::Create(*context, "exit_loop", theFunc);
-	BasicBlock *startBlock = BasicBlock::Create(*context, "loop", theFunc);
+	BasicBlock *startBlock = BasicBlock::Create(*context, "check_loop", theFunc);
+	BasicBlock *loopBlock = BasicBlock::Create(*context, "loop", theFunc);
 
 	//from old block to start block
 	builder->CreateBr(startBlock);
 	
-
-	
-
-	//loop block
-	BasicBlock *loopBlock = std::any_cast<BasicBlock *>(ctx->b->accept(this)); 
-	builder->CreateBr(startBlock);
-
 	//start block (check condition)
 	builder->SetInsertPoint(startBlock);
 
@@ -635,9 +631,45 @@ std::any CodegenVisitor::visitLoop(WPLParser::LoopContext *ctx){
 	builder->CreateCondBr(t, loopBlock, endBlock);
 
 
+	
+
+	//loop block
+	builder->SetInsertPoint(loopBlock);
+	ctx->b->accept(this); 
+	builder->CreateBr(startBlock);
+
+	
 	//end block (out of loop)
 	builder->SetInsertPoint(endBlock);
 	return nullptr;
 
 
 }
+
+
+//std::any CodegenVisitor::visitSelect(WPLParser::SelectContext *ctx){
+//	Function *theFunc = builder->GetInsertBlock()->getParent();
+//	BasicBlock *exit = BasicBlock::Create(*context, "exit_select", theFunc);
+//	std::vector<SelectAltContext *> svec = ctx->s;
+//
+//	BasicBlock *sstate = nullptr; 
+//	BasicBlock *strue = nullptr; 
+//	for(SelectAltContext *sac: svec){
+//		sstate = BasicBlock::Create(*context, "select_", theFunc);
+//		strue = BasicBlock::Create(*context, "s_true", theFunc);
+//		Value *val = sac->e->accept(this);
+//		Value *cmp = builder->CreateICmpEQ(val, builder->getInt32(1));
+//		builder->CreateBr(cmp, strue, sstate);
+//
+//		//if true then do this
+//		builder->SetInsertPoint(strue);
+//		sac->s->accept(this);
+//		builder->CreateBr(exit);
+//
+//		builder->SetInsertPoint(sstate); //check next select block
+//	}
+//	builder->CreateBr(exit);
+//	builder->SetInsertPoint(exit);
+//
+//	return nullptr;
+//}

@@ -46,6 +46,10 @@ fix proc visitor
 	--> what? 
 implement Strings -- declaratoin, assignment!!!!!!
 implement Arrays -- declaration, assignment, length!!!!!!
+
+
+fix block <---- make not BasicBlock -- scope is checked in semantic
 implement select
-implement loop
+
+implement loop -- testme
 
