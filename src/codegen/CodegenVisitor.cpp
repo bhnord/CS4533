@@ -465,7 +465,6 @@ std::any CodegenVisitor::visitConditional(WPLParser::ConditionalContext *ctx){
 
 	//blocks and setup
 	Function *theFunc = builder->GetInsertBlock()->getParent();
-	BasicBlock *currBlock = builder->GetInsertBlock();
 	BasicBlock *tBlock = BasicBlock::Create(*context, "then", theFunc);
 	BasicBlock *endBlock = BasicBlock::Create(*context, "cont", theFunc);
 	BasicBlock *eBlock = nullptr;
@@ -473,7 +472,7 @@ std::any CodegenVisitor::visitConditional(WPLParser::ConditionalContext *ctx){
 
 	Value *t = builder->CreateICmpEQ(cond, builder->getInt32(1));
 	if(ctx->b.size() > 1){
-		BasicBlock *eBlock = BasicBlock::Create(*context, "else", theFunc);
+		eBlock = BasicBlock::Create(*context, "else", theFunc);
 
 		builder->CreateCondBr(t, tBlock, eBlock);
 
@@ -647,29 +646,29 @@ std::any CodegenVisitor::visitLoop(WPLParser::LoopContext *ctx){
 }
 
 
-//std::any CodegenVisitor::visitSelect(WPLParser::SelectContext *ctx){
-//	Function *theFunc = builder->GetInsertBlock()->getParent();
-//	BasicBlock *exit = BasicBlock::Create(*context, "exit_select", theFunc);
-//	std::vector<SelectAltContext *> svec = ctx->s;
-//
-//	BasicBlock *sstate = nullptr; 
-//	BasicBlock *strue = nullptr; 
-//	for(SelectAltContext *sac: svec){
-//		sstate = BasicBlock::Create(*context, "select_", theFunc);
-//		strue = BasicBlock::Create(*context, "s_true", theFunc);
-//		Value *val = sac->e->accept(this);
-//		Value *cmp = builder->CreateICmpEQ(val, builder->getInt32(1));
-//		builder->CreateBr(cmp, strue, sstate);
-//
-//		//if true then do this
-//		builder->SetInsertPoint(strue);
-//		sac->s->accept(this);
-//		builder->CreateBr(exit);
-//
-//		builder->SetInsertPoint(sstate); //check next select block
-//	}
-//	builder->CreateBr(exit);
-//	builder->SetInsertPoint(exit);
-//
-//	return nullptr;
-//}
+std::any CodegenVisitor::visitSelect(WPLParser::SelectContext *ctx){
+	Function *theFunc = builder->GetInsertBlock()->getParent();
+	BasicBlock *exit = BasicBlock::Create(*context, "exit_select", theFunc);
+	std::vector<WPLParser::SelectAltContext *> svec = ctx->s;
+
+	BasicBlock *sstate = nullptr; 
+	BasicBlock *strue = nullptr; 
+	for(WPLParser::SelectAltContext *sac: svec){
+		sstate = BasicBlock::Create(*context, "select_", theFunc);
+		strue = BasicBlock::Create(*context, "s_true", theFunc);
+		Value *val = std::any_cast<Value*>(sac->e->accept(this));
+		Value *cmp = builder->CreateICmpEQ(val, builder->getInt32(1));
+		builder->CreateCondBr(cmp, strue, sstate);
+
+		//if true then do this
+		builder->SetInsertPoint(strue);
+		sac->s->accept(this);
+		builder->CreateBr(exit);
+
+		builder->SetInsertPoint(sstate); //check next select block
+	}
+	builder->CreateBr(exit);
+	builder->SetInsertPoint(exit);
+
+	return nullptr;
+}
