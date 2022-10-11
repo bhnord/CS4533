@@ -1,8 +1,8 @@
 int k <- 0;
-int func callme(){
-	int si <- 0;
-	return si;
-}
 int func c(int f){
-	return 4; 
+	int i <- 0;
+	while i = 0 do {
+		i <- i + 1;
+	}
+	return i; 
 }

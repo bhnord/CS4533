@@ -84,7 +84,7 @@ class  CodegenVisitor: public WPLBaseVisitor {
 
 		//  std::any visitStatement(WPLParser::StatementContext *ctx) override;
 
-		//  std::any visitLoop(WPLParser::LoopContext *ctx) override;
+		std::any visitLoop(WPLParser::LoopContext *ctx) override;
 
 		std::any visitConditional(WPLParser::ConditionalContext *ctx) override;
 

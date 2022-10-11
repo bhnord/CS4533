@@ -376,18 +376,14 @@ std::any CodegenVisitor::visitFuncHeader(WPLParser::FuncHeaderContext *ctx){
 	return func;
 }
 
-//IS THIS CORRECT?? ---------------- YOU ARE IN CHARGE OF GOING BACK!!
+//--------------- YOU ARE IN CHARGE OF GOING BACK!!
 std::any CodegenVisitor::visitBlock(WPLParser::BlockContext *ctx){
 	Function *theFunc = builder->GetInsertBlock()->getParent();
-	BasicBlock *back = builder->GetInsertBlock();
 	BasicBlock *bBlock = BasicBlock::Create(*context, "block", theFunc);
 
-	//PROBABLY TAKE OUT CREATEBR
 	builder->SetInsertPoint(bBlock);
 	this->visitChildren(ctx);
-	//builder->CreateBr(back);
 
-	//builder->SetInsertPoint(back);
 	return bBlock;
 }
 
@@ -609,3 +605,39 @@ std::any CodegenVisitor::visitFuncCallExpr(WPLParser::FuncCallExprContext *ctx){
 	Value *val = builder->CreateCall(func, *args);
 	return val;
 }	
+
+std::any CodegenVisitor::visitLoop(WPLParser::LoopContext *ctx){
+
+	Function *theFunc = builder->GetInsertBlock()->getParent();
+
+	BasicBlock *currBlock = builder->GetInsertBlock();
+
+	BasicBlock *endBlock = BasicBlock::Create(*context, "exit_loop", theFunc);
+	BasicBlock *startBlock = BasicBlock::Create(*context, "loop", theFunc);
+
+	//from old block to start block
+	builder->CreateBr(startBlock);
+	
+
+	
+
+	//loop block
+	BasicBlock *loopBlock = std::any_cast<BasicBlock *>(ctx->b->accept(this)); 
+	builder->CreateBr(startBlock);
+
+	//start block (check condition)
+	builder->SetInsertPoint(startBlock);
+
+	//---------evaluate in start block
+	Value *val = std::any_cast<Value *>(ctx->e->accept(this));
+
+	Value *t = builder->CreateICmpEQ(val, builder->getInt32(1));
+	builder->CreateCondBr(t, loopBlock, endBlock);
+
+
+	//end block (out of loop)
+	builder->SetInsertPoint(endBlock);
+	return nullptr;
+
+
+}
