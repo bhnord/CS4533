@@ -1,9 +1,8 @@
 int k <- 0;
-extern int func blo(int k, boolean b);
 int func callme(){
-	k <- 10;
-	return k;
+	int si <- 0;
+	return si;
 }
 int func c(int f){
-	return blo(3, true);
+	return 4; 
 }

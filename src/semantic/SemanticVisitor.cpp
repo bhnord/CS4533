@@ -38,7 +38,7 @@ std::any SemanticVisitor::visitScalarDeclaration(WPLParser::ScalarDeclarationCon
 		if(symbol == nullptr){
 			errors.addSemanticError(s->getStart(), "Duplicate variable: " + id);
 		} else {
-			///ADDED BINDING SHERE -------------------
+			//bindings
 			bindings->bind(s, symbol);
 		}
 	}
@@ -53,9 +53,10 @@ std::any SemanticVisitor::visitType(WPLParser::TypeContext *ctx) {
 
 std::any SemanticVisitor::visitBlock(WPLParser::BlockContext *ctx){
 	stmgr -> enterScope();
+	Scope *sc = stmgr->getCurrentScope2();
 	this ->visitChildren(ctx);
 	stmgr-> exitScope();
-	return nullptr;
+	return sc;
 }
 
 std::any SemanticVisitor::visitFuncHeader(WPLParser::FuncHeaderContext *ctx) {
@@ -89,8 +90,12 @@ std::any SemanticVisitor::visitFuncHeader(WPLParser::FuncHeaderContext *ctx) {
 }
 
 std::any SemanticVisitor::visitFunction(WPLParser::FunctionContext *ctx){
-	this->visitChildren(ctx);
-	stmgr->exitScope(); // entered in the header
+	ctx->fh->accept(this);
+	Scope* currScope = stmgr->getCurrentScope2();
+	Scope* blkScope = std::any_cast<Scope*>(ctx->b->accept(this));
+
+	stmgr->setCurrentScope(blkScope); //SET SCOPE INSIDE BLOCK
+			    
 
 	SymBaseType fType = std::any_cast<SymBaseType>(ctx->fh->t->accept(this));
 	for(WPLParser::StatementContext *st : ctx->b->s){
@@ -110,13 +115,12 @@ std::any SemanticVisitor::visitFunction(WPLParser::FunctionContext *ctx){
 	if(ctx->b->s.size() != 0){
 		WPLParser::StatementContext *s = ctx->b->s[ctx->b->s.size()-1];
 
-		if(s != nullptr){
-			if(s->r != nullptr){
-				return nullptr;
-			}
+		if(s == nullptr || s->r == nullptr){
+			errors.addSemanticError(ctx -> getStart(), "No return as last in function: ");
 		}
 	}
-	errors.addSemanticError(ctx -> getStart(), "No return as last in function: ");
+	stmgr->setCurrentScope(currScope); //SET SCOPE BACK 
+	stmgr->exitScope(); // entered in the header
 	return nullptr;
 }
 
@@ -147,7 +151,6 @@ std::any SemanticVisitor::visitProcHeader(WPLParser::ProcHeaderContext *ctx){
 
 std::any SemanticVisitor::visitProcedure(WPLParser::ProcedureContext *ctx){
 	this->visitChildren(ctx);
-	stmgr->exitScope();
 	SymBaseType pType = SymBaseType::UNDEFINED; 
 	for(WPLParser::StatementContext *st : ctx->b->s){
 		if(st->r != nullptr){
@@ -158,6 +161,8 @@ std::any SemanticVisitor::visitProcedure(WPLParser::ProcedureContext *ctx){
 			} 
 		}
 	}
+
+	stmgr->exitScope();
 	return nullptr;
 }
 

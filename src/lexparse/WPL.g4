@@ -9,7 +9,7 @@ compilationUnit   : e+=cuComponent+ EOF;
 ////TAKE OUT EXPR  and  statement FROM CUCOMPONENT!!!!!!!!!!!!!!!!!!!
 cuComponent       : varDeclaration | procedure | function | externDeclaration ;
 varDeclaration    : scalarDeclaration | arrayDeclaration ;
-scalarDeclaration : (t=type| VAR) scalars+=scalar (',' scalars+=scalar)* ';' ;
+scalarDeclaration : (t=type| v=VAR) scalars+=scalar (',' scalars+=scalar)* ';' ;
 scalar            : id=ID v=varInitializer? ;
 arrayDeclaration  : t=type '[' i=INTEGER ']' id=ID ';' ;       // No dynamic arrays, type not inferred
 type              : b=BOOL | i=INT | s=STR ;  

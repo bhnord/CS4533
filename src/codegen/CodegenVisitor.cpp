@@ -79,11 +79,13 @@ std::any CodegenVisitor::visitScalar(WPLParser::ScalarContext *ctx){
 	Value *exVal = nullptr;
 
 	//globals
-	if(ctx->v != nullptr){
 
 		bool inFunc = builder->GetInsertBlock() != nullptr;
 
-		exVal =  std::any_cast<Value *>(ctx->v->accept(this));
+		if(ctx->v != nullptr)
+			exVal =  std::any_cast<Value *>(ctx->v->accept(this));
+		else
+			exVal = builder->getInt32(0);
 		Symbol *varSymbol = props->getBinding(ctx);  // child variable symbol
 		if (varSymbol == nullptr) {
 			errors.addCodegenError(ctx->getStart(), "Undefined variable in expression: " + ctx->id->getText());
@@ -107,7 +109,7 @@ std::any CodegenVisitor::visitScalar(WPLParser::ScalarContext *ctx){
 		}
 		if(inFunc)
 			builder->CreateStore(exVal, v);
-	}
+
 
 	return exVal;
 }

@@ -15,6 +15,8 @@ class STManager {
 
     // Miscellaneous (useful for testing)
     Scope& getCurrentScope() { return *currentScope; }
+    Scope *getCurrentScope2(){return currentScope;}
+    void setCurrentScope(Scope *s) {currentScope = s;}
     int scopeCount() { return scopes.size(); }
     std::string toString() const;
 
