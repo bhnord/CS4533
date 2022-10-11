@@ -1,4 +1,4 @@
-boolean b <- false;
+str tt;
 int ss <- 999;
 str func c(str n){
 return n;

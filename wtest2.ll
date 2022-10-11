@@ -1,7 +1,7 @@
 ; ModuleID = 'WPLC.ll'
 source_filename = "WPLC.ll"
 
-@b = common global i32 0, align 4
+@tt = common global i8* null, align 8
 @ss = common global i32 999, align 4
 
 define i8* @c(i8* %n) {

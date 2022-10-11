@@ -112,7 +112,7 @@ std::any CodegenVisitor::visitScalar(WPLParser::ScalarContext *ctx){
 		else{ //----------------------------------------------------------------------FIX THIS
 			//initialize with empty string
                         StringRef str = "";
-                        exVal = builder->CreateGlobalStringPtr(str, ctx->id->getText());
+                        //exVal = builder->CreateGlobalStringPtr(str, ctx->id->getText());
 		}
 	}
 	// Define the symbol and allocate memory.
@@ -125,11 +125,13 @@ std::any CodegenVisitor::visitScalar(WPLParser::ScalarContext *ctx){
 		GlobalVariable *g = module->getNamedGlobal(varSymbol->id);
 		g->setLinkage(GlobalValue::CommonLinkage);
 		if(ctx->v != nullptr){
-			Constant *c = nullptr;
 
+
+			Constant *c = nullptr;
 			//int initialization
 			if(ctx->v->c->i != nullptr)
 				c = ConstantInt::get(Int32Ty, stoi(ctx->v->c->i->getText()), true);
+			//boolean initialization
 			else if(ctx->v->c->b != nullptr){
 				if(ctx->v->c->b->getText() == "true")
 					c = Int32One;
@@ -146,7 +148,7 @@ std::any CodegenVisitor::visitScalar(WPLParser::ScalarContext *ctx){
 		module->getOrInsertGlobal(varSymbol->id, CodegenVisitor::i8p);
 		GlobalVariable *g = module->getNamedGlobal(varSymbol->id);
 		g->setLinkage(GlobalValue::CommonLinkage);
-		//g->setInitializer(nullptr);
+		g->setInitializer(Constant::getNullValue(i8p));
 		g->setAlignment(Align(8));
 		v = g;
 		//	init with global var
