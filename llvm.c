@@ -1,10 +1,10 @@
 #include <stdbool.h>
 #include <stdio.h>
-int c(char* s);
+char* c(char* s);
 
 int k=0;
 int main(){
-	printf("PRINTING OUTPUT: \n%d\n", c("returnme"));
+	printf("PRINTING OUTPUT: \n%s\n", c("ss"));
 
 }
 

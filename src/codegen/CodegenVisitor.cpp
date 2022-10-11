@@ -74,7 +74,10 @@ std::any CodegenVisitor::visitIDExpr(WPLParser::IDExprContext *ctx){
 	if (!(symbol->defined)) {
 		errors.addCodegenError(ctx->getStart(), "Undefined variable in expression: " + varId);
 	} else {
-		v = builder->CreateLoad(CodegenVisitor::Int32Ty, symbol->val, varId);
+		if(symbol->baseType != SymBaseType::STR)
+			v = builder->CreateLoad(CodegenVisitor::Int32Ty, symbol->val, varId);
+		else
+			v = builder->CreateLoad(CodegenVisitor::i8p, symbol->val, varId);
 	}
 	return v;
 }
@@ -115,13 +118,8 @@ std::any CodegenVisitor::visitScalar(WPLParser::ScalarContext *ctx){
 		g->setAlignment(Align(4));
 		v = g;
 	}else if(!inFunc){ //work on global strings!!!!-----------------------------------------------------------------------!
-		module->getOrInsertGlobal(varSymbol->id, CodegenVisitor::i8p);
-		GlobalVariable *g = module->getNamedGlobal(varSymbol->id);
-		g->setLinkage(GlobalValue::CommonLinkage);
-		//g->setInitializer(Int32Zero);
-		g->setAlignment(Align(8));
-		v = g;
-	
+
+		v=exVal;
 	}	
 	else {
 		if(varSymbol->baseType != SymBaseType::STR)
@@ -336,7 +334,7 @@ std::any CodegenVisitor::visitProcHeader(WPLParser::ProcHeaderContext *ctx){
 			if(SymBaseType::INT == param->baseType || SymBaseType::BOOL == param->baseType){
 				types->push_back(CodegenVisitor::Int32Ty);
 			} else {
-				types->push_back(CodegenVisitor::Int8PtrPtrTy);
+				types->push_back(CodegenVisitor::i8p);
 			}
 		}
 	}
@@ -369,15 +367,15 @@ std::any CodegenVisitor::visitFuncHeader(WPLParser::FuncHeaderContext *ctx){
 		for(Param *param: *params){
 			if(SymBaseType::INT == param->baseType || SymBaseType::BOOL == param->baseType){
 				types->push_back(CodegenVisitor::Int32Ty);
-			} else {
-				types->push_back(CodegenVisitor::Int8PtrPtrTy);
+			} else { //CHECK STRING
+				types->push_back(CodegenVisitor::i8p);
 			}
 		}
 	}
 	if(sym->baseType == INT || sym->baseType == BOOL){
 		funcType = FunctionType::get(CodegenVisitor::Int32Ty, *types,false);
 	}else{ //string
-	       //	funcType = FunctionType::get(CodegenVisitor::Int8PtrPtrTy, {CodegenVisitor::Int32Ty, CodegenVisitor::Int8PtrPtrTy}, false); 
+	       	funcType = FunctionType::get(CodegenVisitor::i8p, *types, false); 
 	}
 	Function *func = Function::Create(funcType, Function::ExternalLinkage, sym->id, module);
 	sym->func = func;
@@ -450,8 +448,13 @@ std::any CodegenVisitor::visitFunction(WPLParser::FunctionContext *ctx){
 std::any CodegenVisitor::visitParam(WPLParser::ParamContext *ctx){
 	Symbol *sym = props->getBinding(ctx);
 	Value *val = sym->val;
-	Value *alloc = builder->CreateAlloca(CodegenVisitor::Int32Ty, 0, sym->id);
- 	builder->CreateStore(val, alloc);
+	
+	Value *alloc = nullptr;
+	if(sym->baseType!= SymBaseType::STR)
+		alloc = builder->CreateAlloca(CodegenVisitor::Int32Ty, 0, sym->id);
+	else 
+		alloc = builder->CreateAlloca(CodegenVisitor::i8p, 0, sym->id);
+	builder->CreateStore(val, alloc);
 	sym->val = alloc;
 	sym->defined = true;
 
@@ -460,7 +463,7 @@ std::any CodegenVisitor::visitParam(WPLParser::ParamContext *ctx){
 }
 
 std::any CodegenVisitor::visitReturn(WPLParser::ReturnContext *ctx){
-	
+
 	Value *v = nullptr;
 	if(ctx->ex != nullptr)
 		v = std::any_cast<Value *>(ctx->ex->accept(this));

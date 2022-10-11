@@ -15,12 +15,13 @@ enter:                                            ; preds = %t1head
   ret i32 4
 }
 
-define i32 @c(i32 %k) {
+define i8* @c(i8* %n) {
 chead:
-  %k1 = alloca i32, align 4
-  store i32 %k, i32* %k1, align 4
+  %n1 = alloca i8*, align 8
+  store i8* %n, i8** %n1, align 8
   br label %enter
 
 enter:                                            ; preds = %chead
-  ret i32 5
+  %n2 = load i8*, i8** %n1, align 8
+  ret i8* %n2
 }

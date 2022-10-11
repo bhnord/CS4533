@@ -3,6 +3,6 @@ int func t1(){
 	test <- "2nd thing";
 	return 4;
 }
-str func c(str k){
-	return k;
+str func c(str n){
+return n;
 }
