@@ -1,29 +1,3 @@
-int error <- 0;
-int func sidesSquared(int a, int b) {
-  int hSquare <- 0;
-  {
-    error <- -1;
-  } {
-    int s1Squared, s2Squared;
-    s1Squared <- a * a;
-    s2Squared <- b * b;
-    boolean s <- false;
-    hSquare <- s1Squared + s2Squared;
-  }
-  {
-    hSquare <- error;
-  }
-  return hSquare;
-}
-boolean b <- true; 
-int func program() {
-  int [4] arr;
-  while true do {
-  }
-  int tree <- 5;
-  boolean tester <- true;
-  tester <- true | false;
-  arr[4] <- arr.length; 
-  return sidesSquared(3, 4);
-
+int func main(){
+	return 4;
 }

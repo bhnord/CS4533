@@ -3,15 +3,17 @@
 
 std::any CodegenVisitor::visitCompilationUnit(WPLParser::CompilationUnitContext *ctx) {
 	// 1. Declare external functions
-	auto printf_prototype = FunctionType::get(i8p, true);
-	auto printf_fn = Function::Create(printf_prototype, Function::ExternalLinkage, "printf", module);
-	FunctionCallee printExpr(printf_prototype, printf_fn);
+//	auto printf_prototype = FunctionType::get(i8p, true);
+//	auto printf_fn = Function::Create(printf_prototype, Function::ExternalLinkage, "printf", module);
+//	FunctionCallee printExpr(printf_prototype, printf_fn);
 
 	// 2. Define the main program.
 //	FunctionType *mainFuncType = FunctionType::get(CodegenVisitor::Int32Ty, {CodegenVisitor::Int32Ty, CodegenVisitor::Int8PtrPtrTy}, false);
 //	Function *mainFunc = Function::Create(mainFuncType,     GlobalValue::ExternalLinkage,
 //			"main", module);
-//
+
+	
+
 //	//	// 3. Create a basic block and attach it to the builder.
 //	BasicBlock *bBlock = BasicBlock::Create(module->getContext(), "entry", mainFunc);
 //	builder->SetInsertPoint(bBlock);
@@ -90,7 +92,11 @@ std::any CodegenVisitor::visitScalar(WPLParser::ScalarContext *ctx){
 			// Define the symbol and allocate memory.
 			if(!inFunc){
 				module->getOrInsertGlobal(varSymbol->id, CodegenVisitor::Int32Ty);
-				v = module->getNamedGlobal(varSymbol->id);
+				GlobalVariable *g = module->getNamedGlobal(varSymbol->id);
+				g->setLinkage(GlobalValue::CommonLinkage);
+				g->setInitializer(Int32Zero);
+				g->setAlignment(Align(4));
+				v = g;
 			} else {
 				v = builder->CreateAlloca(CodegenVisitor::Int32Ty, 0, varSymbol->id);
 			}
@@ -348,11 +354,13 @@ std::any CodegenVisitor::visitFuncHeader(WPLParser::FuncHeaderContext *ctx){
 		std::vector<WPLParser::ParamContext *> p = ctx->p->p;
 		sym->func = func;
 
+		//name params
 		unsigned Idx = 0;
 		for (auto &Arg : func->args())
 			Arg.setName(((*(sym->params))[Idx++])->id);
 
 
+		//map params to args (intermediary -- will alloc params later)
 		Function::arg_iterator args = func->arg_begin();
 		for (WPLParser::ParamContext * px: p){
 			Value *v = args++;
@@ -390,9 +398,13 @@ std::any CodegenVisitor::visitFunction(WPLParser::FunctionContext *ctx){
 	BasicBlock *main = builder->GetInsertBlock();
 	Function *func = std::any_cast<Function *>(ctx->fh->accept(this));
 	BasicBlock *bBlock = BasicBlock::Create(*context, ctx->fh->id->getText() + "head", func);
-
-
 	builder->SetInsertPoint(bBlock);
+
+	//allocate all the params
+	if(ctx->fh->p != nullptr)
+		ctx->fh->p->accept(this); //visit all params
+
+
 	BasicBlock *b = std::any_cast<BasicBlock *>(ctx->b->accept(this));
 	//ret is created inside block
 
@@ -400,6 +412,17 @@ std::any CodegenVisitor::visitFunction(WPLParser::FunctionContext *ctx){
 	builder->CreateBr(b);
 
 	builder->SetInsertPoint(main);
+
+	return nullptr;
+}
+
+std::any CodegenVisitor::visitParam(WPLParser::ParamContext *ctx){
+	Symbol *sym = props->getBinding(ctx);
+	Value *val = sym->val;
+	Value *alloc = builder->CreateAlloca(CodegenVisitor::Int32Ty, 0, sym->id);
+ 	builder->CreateStore(val, alloc);
+	sym->val = alloc;
+	sym->defined = true;
 
 	return nullptr;
 
@@ -488,4 +511,10 @@ std::any CodegenVisitor::visitAssignment(WPLParser::AssignmentContext *ctx){
 
 	return exVal;
 
+}
+
+
+///all expr need return
+std::any CodegenVisitor::visitParenExpr(WPLParser::ParenExprContext *ctx){
+	return ctx->ex->accept(this);
 }

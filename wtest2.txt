@@ -1,5 +1,8 @@
-int k <- 0;
-int func c(int s){
-	k <- s;
-	return 4;
+int func c(int k){
+	if (2 < 5){
+		return 100;
+	} else {
+		return -1;
+	}
+	return k;
 }
