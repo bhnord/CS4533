@@ -176,6 +176,7 @@ std::any SemanticVisitor::visitExternFuncHeader(WPLParser::ExternFuncHeaderConte
         }
         Symbol *sym = new Symbol(id, type, params);
         Symbol *symbol = stmgr->addSymbol(sym); // global scope
+	bindings->bind(ctx, sym);
         if (symbol == nullptr) {
                 errors.addSemanticError(ctx -> getStart(), "Duplicate variable: " + id);
         }
@@ -203,19 +204,24 @@ std::any SemanticVisitor::visitCall(WPLParser::CallContext *ctx){
 		errors.addSemanticError(ctx->getStart(), "Undefined call: " + id);
 	} else {
 		bindings->bind(ctx, s);	
-		std::vector<SymBaseType> *args = std::any_cast<std::vector<SymBaseType>*>(ctx->a->accept(this));
 		std::vector<Param*> *params = s->params;
 		//CHECK IF THEY HAVE EQUAL TYPES
-		unsigned int size = params->size();
-		if(args->size() != size){
-			errors.addSemanticError(ctx->getStart(), "Invalid number of parameters: " + id);
-		} else {
-			for(unsigned int i = 0; i < size; i++){
-				if((*params)[i]->baseType != (*args)[i]){
-					errors.addSemanticError(ctx->getStart(), "Invalid parameter type: " + Symbol::getSymBaseTypeName((*args)[i]) + ", Expected: " + Symbol::getSymBaseTypeName((*params)[i]->baseType) + " for parameter " + (*params)[i]->id);
+		if(ctx->a != nullptr && params != nullptr){
+			unsigned int size = params->size();
+			std::vector<SymBaseType> *args = std::any_cast<std::vector<SymBaseType>*>(ctx->a->accept(this));
+			if(args->size() != size){
+				errors.addSemanticError(ctx->getStart(), "Invalid number of parameters: " + id);
+			} else if(ctx->a != nullptr){
+				for(unsigned int i = 0; i < size; i++){
+					if((*params)[i]->baseType != (*args)[i]){
+						errors.addSemanticError(ctx->getStart(), "Invalid parameter type: " + Symbol::getSymBaseTypeName((*args)[i]) + ", Expected: " + Symbol::getSymBaseTypeName((*params)[i]->baseType) + " for parameter " + (*params)[i]->id);
+					}
 				}
-			}
 
+			}
+		} else if(!(ctx->a == nullptr && params == nullptr)){
+			//one has 0 the other does not
+			errors.addSemanticError(ctx->getStart(), "Invalid number of parameters: " + id);
 		}
 	}
 	return nullptr;
@@ -223,9 +229,9 @@ std::any SemanticVisitor::visitCall(WPLParser::CallContext *ctx){
 
 std::any SemanticVisitor::visitFuncCallExpr(WPLParser::FuncCallExprContext *ctx){
 	std::string id = ctx->fname->getText();
-        Symbol *s = stmgr->findSymbol(id);
+	Symbol *s = stmgr->findSymbol(id);
 	SymBaseType type = SymBaseType::UNDEFINED;
-        if(s == nullptr || s->type != SymType::FUNC){
+	if(s == nullptr || s->type != SymType::FUNC){
 		errors.addSemanticError(ctx->getStart(), "Undefined call: " + id);
 	} else {
 		type = s->baseType;

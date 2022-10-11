@@ -68,13 +68,13 @@ class  CodegenVisitor: public WPLBaseVisitor {
 
 		std::any visitProcHeader(WPLParser::ProcHeaderContext *ctx) override;
 
-		//  std::any visitExternProcHeader(WPLParser::ExternProcHeaderContext *ctx) override;
+		std::any visitExternProcHeader(WPLParser::ExternProcHeaderContext *ctx) override;
 
 		std::any visitFunction(WPLParser::FunctionContext *ctx) override;
 
 		 std::any visitFuncHeader(WPLParser::FuncHeaderContext *ctx) override;
 
-		//  std::any visitExternFuncHeader(WPLParser::ExternFuncHeaderContext *ctx) override;
+		std::any visitExternFuncHeader(WPLParser::ExternFuncHeaderContext *ctx) override;
 
 		//  std::any visitParams(WPLParser::ParamsContext *ctx) override;
 

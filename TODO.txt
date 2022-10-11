@@ -41,4 +41,13 @@ MAKE IT SO THAT "RETURN" WITH NO EXPR IS OKAY.
   calculator -o myexprs.ll myexprs.cl
   clang -o myexprs myexprs.ll
 
+check return in Semantics
 implement var variable
+implement function, proc call
+fix proc visitor
+implement Strings -- declaratoin, assignment!!!!!!
+implement Arrays -- declaration, assignment, length!!!!!!
+implement extern functions 
+implement select
+implement loop
+

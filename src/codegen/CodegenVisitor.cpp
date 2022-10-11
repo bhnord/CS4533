@@ -298,9 +298,8 @@ std::any CodegenVisitor::visitProcHeader(WPLParser::ProcHeaderContext *ctx){
 
 	std::vector<Type *> *types = new std::vector<Type*>;
 
-	std::vector<Param*> *params = nullptr;
 	if(sym->params != nullptr){
-		params = sym->params;
+		std::vector<Param*> *params = sym->params;
 		for(Param *param: *params){
 			if(SymBaseType::INT == param->baseType || SymBaseType::BOOL == param->baseType){
 				types->push_back(CodegenVisitor::Int32Ty);
@@ -349,10 +348,9 @@ std::any CodegenVisitor::visitFuncHeader(WPLParser::FuncHeaderContext *ctx){
 	       //	funcType = FunctionType::get(CodegenVisitor::Int8PtrPtrTy, {CodegenVisitor::Int32Ty, CodegenVisitor::Int8PtrPtrTy}, false); 
 	}
 	Function *func = Function::Create(funcType, Function::ExternalLinkage, sym->id, module);
-
+	sym->func = func;
 	if(ctx->p != nullptr){
 		std::vector<WPLParser::ParamContext *> p = ctx->p->p;
-		sym->func = func;
 
 		//name params
 		unsigned Idx = 0;
@@ -429,7 +427,10 @@ std::any CodegenVisitor::visitParam(WPLParser::ParamContext *ctx){
 }
 
 std::any CodegenVisitor::visitReturn(WPLParser::ReturnContext *ctx){
-	Value *v = std::any_cast<Value *>(ctx->ex->accept(this));
+	
+	Value *v = nullptr;
+	if(ctx->ex != nullptr)
+		v = std::any_cast<Value *>(ctx->ex->accept(this));
 	builder->CreateRet(v);
 	return nullptr;
 }
@@ -437,15 +438,16 @@ std::any CodegenVisitor::visitReturn(WPLParser::ReturnContext *ctx){
 
 
 
-//call to function 
+//call to function NEED TO FIX FOR FUNCTION --- WORKS WITH PROC 
 std::any CodegenVisitor::visitCall(WPLParser::CallContext *ctx){
 	Symbol *s = props->getBinding(ctx);
 	Function *func = s->func;
 	std::vector<Value *> *args = new std::vector<Value *>;
-	for(WPLParser::ArgContext *a : ctx->a->a){
-		Value *v = std::any_cast<Value *>(a->accept(this));
-		args->push_back(v);
-	}
+	if(ctx->a != nullptr)
+		for(WPLParser::ArgContext *a : ctx->a->a){
+			Value *v = std::any_cast<Value *>(a->accept(this));
+			args->push_back(v);
+		}
 	builder->CreateCall(func, *args); 
 	return nullptr;
 }
@@ -517,4 +519,78 @@ std::any CodegenVisitor::visitAssignment(WPLParser::AssignmentContext *ctx){
 ///all expr need return
 std::any CodegenVisitor::visitParenExpr(WPLParser::ParenExprContext *ctx){
 	return ctx->ex->accept(this);
+}
+
+
+
+std::any CodegenVisitor::visitExternFuncHeader(WPLParser::ExternFuncHeaderContext *ctx){
+	bool optArgs = ctx->e != nullptr;
+
+	Symbol *sym = props->getBinding(ctx);
+
+	Type *res = nullptr;
+	if(sym->baseType == SymBaseType::INT || sym->baseType == SymBaseType::BOOL)
+		res = Int32Ty;
+	else
+		res = Int8PtrPtrTy; 
+
+	std::vector<Type *> *types = new std::vector<Type*>;
+	if(sym->params != nullptr){
+		std::vector<Param*> *params = sym->params;
+		for(Param *param: *params){
+			if(SymBaseType::INT == param->baseType || SymBaseType::BOOL == param->baseType){
+				types->push_back(CodegenVisitor::Int32Ty);
+			} else {
+				types->push_back(CodegenVisitor::Int8PtrPtrTy);
+			}
+		}
+	}
+
+
+	FunctionType *funcType = FunctionType::get(res, *types ,optArgs);
+	Function *func = Function::Create(funcType, Function::ExternalLinkage, sym->id, module);
+
+	sym->func = func;
+	unsigned Idx = 0;
+	for (auto &Arg : func->args())
+		Arg.setName(((*(sym->params))[Idx++])->id);
+
+
+
+	return nullptr;
+}
+
+
+
+std::any CodegenVisitor::visitExternProcHeader(WPLParser::ExternProcHeaderContext *ctx){
+	bool optArgs = ctx->e != nullptr;
+
+	Symbol *sym = props->getBinding(ctx);
+
+	Type *res = VoidTy;
+
+	std::vector<Type *> *types = new std::vector<Type*>;
+	if(sym->params != nullptr){
+		std::vector<Param*> *params = sym->params;
+		for(Param *param: *params){
+			if(SymBaseType::INT == param->baseType || SymBaseType::BOOL == param->baseType){
+				types->push_back(CodegenVisitor::Int32Ty);
+			} else {
+				types->push_back(CodegenVisitor::Int8PtrPtrTy);
+			}
+		}
+	}
+
+
+	FunctionType *funcType = FunctionType::get(res, *types ,optArgs);
+	Function *func = Function::Create(funcType, Function::ExternalLinkage, sym->id, module);
+
+	sym->func = func;
+	unsigned Idx = 0;
+	for (auto &Arg : func->args())
+		Arg.setName(((*(sym->params))[Idx++])->id);
+
+
+
+	return nullptr;
 }

@@ -1,8 +1,9 @@
-int func c(int k){
-	if (2 < 5){
-		return 100;
-	} else {
-		return -1;
-	}
+int k <- 0;
+int func callme(){
+	k <- 10;
+	return 100;
+}
+int func c(int f){
+	callme();
 	return k;
 }

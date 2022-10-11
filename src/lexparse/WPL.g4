@@ -18,10 +18,10 @@ externDeclaration : 'extern' (externProcHeader | externFuncHeader) ';';
 
 procedure         : ph=procHeader b=block ;
 procHeader        : 'proc' id=ID '(' p=params? ')' ;
-externProcHeader  : 'proc' id=ID '(' ((p=params ',' ELLIPSIS) | p=params? | ELLIPSIS?) ')' ;
+externProcHeader  : 'proc' id=ID '(' ((p=params ',' e=ELLIPSIS) | p=params? | e=ELLIPSIS?) ')' ;
 function          : fh=funcHeader b=block  ;
 funcHeader        : t=type 'func' id=ID '(' p=params? ')' ;
-externFuncHeader  : t=type 'func' id=ID '(' ((p=params ',' ELLIPSIS) | p=params? | ELLIPSIS?) ')' ;
+externFuncHeader  : t=type 'func' id=ID '(' ((p=params ',' e=ELLIPSIS) | p=params? | e=ELLIPSIS?) ')' ;
 
 params            : (p+=param (',' p+=param)*) ;
 param		  : t=type id=ID;
