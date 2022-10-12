@@ -1,8 +1,8 @@
 #include <stdbool.h>
 #include <stdio.h>
-int program();
+char* program();
 int main(){
-	printf("PRINTING OUTPUT: \n%d\n", program());
+	printf("PRINTING OUTPUT: \n%s\n", program());
 
 }
 

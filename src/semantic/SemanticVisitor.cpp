@@ -450,7 +450,11 @@ std::any SemanticVisitor::visitAssignment(WPLParser::AssignmentContext *ctx){
 	SymBaseType right = std::any_cast<SymBaseType>(ctx->e->accept(this));
 
 	SymBaseType left = SymBaseType::UNDEFINED;
-	std::string id = ctx -> target -> getText();
+	std::string id = "";
+	if(ctx->target != nullptr)
+		id = ctx -> target -> getText();
+	else
+		id = ctx->arr->id->getText();
 	Symbol* symbol = stmgr-> findSymbol(id);
 	if(symbol != nullptr){
 		bindings -> bind(ctx, symbol);

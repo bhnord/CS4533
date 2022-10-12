@@ -586,11 +586,11 @@ std::any CodegenVisitor::visitAssignment(WPLParser::AssignmentContext *ctx){
 		errors.addCodegenError(ctx->getStart(), "Undefined variable in expression: " + ctx->target->getText());
 	}else if(varSymbol->type == SymType::ARRAY){
 
-		Type* arrType;
-		if(varSymbol->baseType != SymBaseType::STR)
-			arrType = Int32Ty;
-		else
-			arrType = i8p;
+//		Type* arrType;
+//		if(varSymbol->baseType != SymBaseType::STR)
+//			arrType = Int32Ty;
+//		else
+//			arrType = i8p;
 		v = builder->CreateInBoundsGEP(varSymbol->val, {builder->getInt32(0), std::any_cast<Value*>(ctx->arr->ex->accept(this))});
 	}else { //scalar
 		v = varSymbol->val;
