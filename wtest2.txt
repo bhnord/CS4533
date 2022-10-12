@@ -1,6 +1,5 @@
-str s <- "hello";
-
-str func c(){
-return s;
+extern int func printf(str format, ...);
+str func program(){
+	printf("Hello");
+	return "line1\nline2";
 }
-

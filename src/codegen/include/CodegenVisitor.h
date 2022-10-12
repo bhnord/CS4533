@@ -56,7 +56,7 @@ class  CodegenVisitor: public WPLBaseVisitor {
 
 		std::any visitScalar(WPLParser::ScalarContext *ctx) override;
 
-		//  std::any visitArrayDeclaration(WPLParser::ArrayDeclarationContext *ctx) override;
+		std::any visitArrayDeclaration(WPLParser::ArrayDeclarationContext *ctx) override;
 
 		//  std::any visitType(WPLParser::TypeContext *ctx) override;
 

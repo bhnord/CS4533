@@ -352,13 +352,16 @@ std::any SemanticVisitor::visitArrayDeclaration(WPLParser::ArrayDeclarationConte
 	std::string i = ctx->i->getText();
 	int len = std::stoi(ctx->i->getText());
 
-	if(len < 0){
+	if(len <= 0){
 		errors.addSemanticError(ctx->getStart(), "Invalid array length: " + id + ", " + ctx->i->getText());
 	} else {
 		Symbol *sym = new Symbol(id, t, len);
 		Symbol *symbol = stmgr->addSymbol(sym);
+		
 		if(symbol == nullptr){
 			errors.addSemanticError(ctx->getStart(), "Duplicate variable: " + id);
+		} else {
+			bindings->bind(ctx, sym);
 		}
 	}
 	return nullptr;

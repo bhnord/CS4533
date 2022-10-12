@@ -1,4 +1,0 @@
-char* c;
-int func main(){
-	return 4;
-}

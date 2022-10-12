@@ -1,10 +1,8 @@
 #include <stdbool.h>
 #include <stdio.h>
-char* c(char* kk);
-
-char* mine = "hello";
+char* program();
 int main(){
-	printf("PRINTING OUTPUT: \n%s\n", c("no"));
+	printf("PRINTING OUTPUT: \n%s\n", program());
 
 }
 

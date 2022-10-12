@@ -616,7 +616,7 @@ std::any CodegenVisitor::visitExternFuncHeader(WPLParser::ExternFuncHeaderContex
 			if(SymBaseType::INT == param->baseType || SymBaseType::BOOL == param->baseType){
 				types->push_back(CodegenVisitor::Int32Ty);
 			} else {
-				types->push_back(CodegenVisitor::Int8PtrPtrTy);
+				types->push_back(CodegenVisitor::i8p);
 			}
 		}
 	}
@@ -651,7 +651,7 @@ std::any CodegenVisitor::visitExternProcHeader(WPLParser::ExternProcHeaderContex
 			if(SymBaseType::INT == param->baseType || SymBaseType::BOOL == param->baseType){
 				types->push_back(CodegenVisitor::Int32Ty);
 			} else {
-				types->push_back(CodegenVisitor::Int8PtrPtrTy);
+				types->push_back(CodegenVisitor::i8p);
 			}
 		}
 	}
@@ -746,3 +746,50 @@ std::any CodegenVisitor::visitSelect(WPLParser::SelectContext *ctx){
 
 	return nullptr;
 }
+
+
+
+ std::any CodegenVisitor::visitArrayDeclaration(WPLParser::ArrayDeclarationContext *ctx) {
+	 Symbol *varSymbol = props->getBinding(ctx);  // child variable symbol
+	 if (varSymbol == nullptr) {
+		 errors.addCodegenError(ctx->getStart(), "Undefined variable in expression: " + ctx->id->getText());
+		 return -1;
+	 }
+
+	 bool inFunc = builder->GetInsertBlock() != nullptr;
+
+	 if(varSymbol ->baseType != SymBaseType::STR){
+		 ArrayType *arrType = ArrayType::get(Int32Ty, varSymbol->length);
+		 if(!inFunc){
+			module->getOrInsertGlobal(varSymbol->id, arrType);
+			GlobalVariable *g = module->getNamedGlobal(varSymbol->id);
+			g->setAlignment(Align(16));
+			g->setLinkage(GlobalValue::LinkageTypes::CommonLinkage);
+			g->setInitializer(ConstantAggregateZero::get(arrType));
+			g->setDSOLocal(true);
+			varSymbol->val = g;
+
+		 } else {
+			 //in a function 
+			 AllocaInst* alloca = builder->CreateAlloca(arrType, 0, varSymbol->id);
+			 alloca->setAlignment(Align(16));
+			 varSymbol->val = alloca; 
+		 }
+	 } else { //is a string
+	 	ArrayType *arrType = ArrayType::get(i8p, varSymbol->length);
+		if(!inFunc){
+			module->getOrInsertGlobal(varSymbol->id, arrType);
+			GlobalVariable *g = module->getNamedGlobal(varSymbol->id);
+			g->setAlignment(Align(16));
+			g->setLinkage(GlobalValue::LinkageTypes::CommonLinkage);
+			g->setInitializer(ConstantAggregateZero::get(arrType));
+			g->setDSOLocal(true);
+			varSymbol->val = g;
+		} else {
+			AllocaInst* alloca = builder->CreateAlloca(arrType, 0, varSymbol->id);
+			alloca->setAlignment(Align(16));
+			varSymbol->val = alloca;
+		}
+	 }
+	 return nullptr;
+ }

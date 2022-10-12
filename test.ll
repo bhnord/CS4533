@@ -3,13 +3,14 @@ source_filename = "test.c"
 target datalayout = "e-m:e-p270:32:32-p271:32:32-p272:64:64-i64:64-f80:128-n8:16:32:64-S128"
 target triple = "x86_64-pc-linux-gnu"
 
-@.str = private unnamed_addr constant [6 x i8] c"hello\00", align 1
-@s = dso_local global i8* getelementptr inbounds ([6 x i8], [6 x i8]* @.str, i32 0, i32 0), align 8
+@k = dso_local global i32 0, align 4
 
 ; Function Attrs: noinline nounwind optnone uwtable
-define dso_local i8* @c() #0 {
-  %1 = load i8*, i8** @s, align 8
-  ret i8* %1
+define dso_local void @func() #0 {
+  %1 = alloca [10 x i32], align 16
+  %2 = getelementptr inbounds [10 x i32], [10 x i32]* %1, i64 0, i64 5
+  store i32 3, i32* %2, align 4
+  ret void
 }
 
 attributes #0 = { noinline nounwind optnone uwtable "disable-tail-calls"="false" "frame-pointer"="all" "less-precise-fpmad"="false" "min-legal-vector-width"="0" "no-infs-fp-math"="false" "no-jump-tables"="false" "no-nans-fp-math"="false" "no-signed-zeros-fp-math"="false" "no-trapping-math"="true" "stack-protector-buffer-size"="8" "target-cpu"="x86-64" "target-features"="+cx8,+fxsr,+mmx,+sse,+sse2,+x87" "tune-cpu"="generic" "unsafe-fp-math"="false" "use-soft-float"="false" }
