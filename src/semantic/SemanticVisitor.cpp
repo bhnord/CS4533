@@ -127,6 +127,8 @@ std::any SemanticVisitor::visitFunction(WPLParser::FunctionContext *ctx){
 		if(s == nullptr || s->r == nullptr){
 			errors.addSemanticError(ctx -> getStart(), "No return as last in function: ");
 		}
+	} else {
+		errors.addSemanticError(ctx->getStart(), "No return in function: ");
 	}
 	stmgr->setCurrentScope(currScope); //SET SCOPE BACK 
 	stmgr->exitScope(); // entered in the header

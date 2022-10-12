@@ -1,5 +1,6 @@
-str tt;
-int ss <- 999;
-str func c(str n){
-return n;
+str s <- "hello";
+
+str func c(){
+return s;
 }
+

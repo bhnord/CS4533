@@ -3,20 +3,20 @@
 
 std::any CodegenVisitor::visitCompilationUnit(WPLParser::CompilationUnitContext *ctx) {
 	// 1. Declare external functions
-//	auto printf_prototype = FunctionType::get(i8p, true);
-//	auto printf_fn = Function::Create(printf_prototype, Function::ExternalLinkage, "printf", module);
-//	FunctionCallee printExpr(printf_prototype, printf_fn);
+	//	auto printf_prototype = FunctionType::get(i8p, true);
+	//	auto printf_fn = Function::Create(printf_prototype, Function::ExternalLinkage, "printf", module);
+	//	FunctionCallee printExpr(printf_prototype, printf_fn);
 
 	// 2. Define the main program.
-//	FunctionType *mainFuncType = FunctionType::get(CodegenVisitor::Int32Ty, {CodegenVisitor::Int32Ty, CodegenVisitor::Int8PtrPtrTy}, false);
-//	Function *mainFunc = Function::Create(mainFuncType,     GlobalValue::ExternalLinkage,
-//			"main", module);
+	//	FunctionType *mainFuncType = FunctionType::get(CodegenVisitor::Int32Ty, {CodegenVisitor::Int32Ty, CodegenVisitor::Int8PtrPtrTy}, false);
+	//	Function *mainFunc = Function::Create(mainFuncType,     GlobalValue::ExternalLinkage,
+	//			"main", module);
 
-	
 
-//	//	// 3. Create a basic block and attach it to the builder.
-//	BasicBlock *bBlock = BasicBlock::Create(module->getContext(), "entry", mainFunc);
-//	builder->SetInsertPoint(bBlock);
+
+	//	//	// 3. Create a basic block and attach it to the builder.
+	//	BasicBlock *bBlock = BasicBlock::Create(module->getContext(), "entry", mainFunc);
+	//	builder->SetInsertPoint(bBlock);
 
 
 
@@ -38,7 +38,7 @@ std::any CodegenVisitor::visitCompilationUnit(WPLParser::CompilationUnitContext 
 
 
 
-//	builder->CreateRet(CodegenVisitor::Int32Zero);
+	//	builder->CreateRet(CodegenVisitor::Int32Zero);
 	return nullptr;
 }
 
@@ -59,7 +59,7 @@ std::any CodegenVisitor::visitConstant(WPLParser::ConstantContext *ctx){
 		s.erase(s.size()-1, 1).erase(0, 1); //remove " " part of string
 		StringRef str = s;
 		v = builder->CreateGlobalStringPtr(str, "const");
-		
+
 	}///STILL NEED TO DO STRING!!
 	return v;
 
@@ -84,8 +84,8 @@ std::any CodegenVisitor::visitIDExpr(WPLParser::IDExprContext *ctx){
 
 
 std::any CodegenVisitor::visitScalar(WPLParser::ScalarContext *ctx){
-      Value *v = nullptr;
-      Value *exVal = nullptr;
+	Value *v = nullptr;
+	Value *exVal = nullptr;
 
 	//globals
 	Symbol *varSymbol = props->getBinding(ctx);  // child variable symbol
@@ -96,74 +96,85 @@ std::any CodegenVisitor::visitScalar(WPLParser::ScalarContext *ctx){
 
 	bool inFunc = builder->GetInsertBlock() != nullptr;
 
-	if(ctx->v != nullptr){
-		if(varSymbol->baseType != SymBaseType::STR)
-			exVal =  std::any_cast<Value *>(ctx->v->accept(this));
-		else {
-			std::string s = ctx->v->c->s->getText();
-			s.erase(s.size()-1, 1).erase(0, 1); //remove " " part of string
-			StringRef str = s;
-			exVal = builder->CreateGlobalStringPtr(str, ctx->id->getText());
-		}
-	}
-	else{ 
-		if(varSymbol->baseType != SymBaseType::STR)
-			exVal = builder->getInt32(0);
-		else{ //----------------------------------------------------------------------FIX THIS
-			//initialize with empty string
-                        StringRef str = "";
-                        //exVal = builder->CreateGlobalStringPtr(str, ctx->id->getText());
-		}
-	}
-	// Define the symbol and allocate memory.
-	// testhere
-	
-//allocate memory for global type
-	if(!inFunc && varSymbol->baseType != SymBaseType::STR){
-		
-		module->getOrInsertGlobal(varSymbol->id, CodegenVisitor::Int32Ty);
-		GlobalVariable *g = module->getNamedGlobal(varSymbol->id);
-		g->setLinkage(GlobalValue::CommonLinkage);
-		if(ctx->v != nullptr){
-
-
-			Constant *c = nullptr;
-			//int initialization
-			if(ctx->v->c->i != nullptr)
-				c = ConstantInt::get(Int32Ty, stoi(ctx->v->c->i->getText()), true);
-			//boolean initialization
-			else if(ctx->v->c->b != nullptr){
-				if(ctx->v->c->b->getText() == "true")
-					c = Int32One;
-				else 
-					c = Int32Zero;
-			}
-			g->setInitializer(c);
-		}
+	if(varSymbol->baseType != SymBaseType::STR){
+		if(ctx->v != nullptr)
+			exVal =  std::any_cast<Value *>(ctx->v->accept(this));	
 		else 
-			g->setInitializer(Int32Zero);
-		g->setAlignment(Align(4));
-		v = g;
-	}else if(!inFunc){ //work on global strings!!!!-----------------------------------------------------------------------!
-		module->getOrInsertGlobal(varSymbol->id, CodegenVisitor::i8p);
-		GlobalVariable *g = module->getNamedGlobal(varSymbol->id);
-		g->setLinkage(GlobalValue::CommonLinkage);
-		g->setInitializer(Constant::getNullValue(i8p));
-		g->setAlignment(Align(8));
-		v = g;
-		//	init with global var
-	}	
-	else {
-		if(varSymbol->baseType != SymBaseType::STR)
-			v = builder->CreateAlloca(CodegenVisitor::Int32Ty, 0, varSymbol->id);
-		else
-			v = builder->CreateAlloca(CodegenVisitor::i8p, 0, varSymbol->id);  
+			exVal = builder->getInt32(0);
 
+		if(!inFunc){
+			module->getOrInsertGlobal(varSymbol->id, CodegenVisitor::Int32Ty);
+			GlobalVariable *g = module->getNamedGlobal(varSymbol->id);
+			g->setDSOLocal(true);
+			if(ctx->v != nullptr){
+
+
+				Constant *c = nullptr;
+				//int initialization
+				if(ctx->v->c->i != nullptr)
+					c = ConstantInt::get(Int32Ty, stoi(ctx->v->c->i->getText()), true);
+				//boolean initialization
+				else if(ctx->v->c->b != nullptr){
+					if(ctx->v->c->b->getText() == "true")
+						c = Int32One;
+					else 
+						c = Int32Zero;
+				}
+				g->setInitializer(c);
+			}
+			else 
+				g->setInitializer(Int32Zero);
+			g->setAlignment(Align(4));
+			v = g;
+
+		}
+		else { //in a func
+			v = builder->CreateAlloca(CodegenVisitor::Int32Ty, 0, varSymbol->id);
+			builder->CreateStore(exVal, v);
+		}
+	}
+	else{ //is a string
+	      //initialize with empty string
+	      //exVal = builder->CreateGlobalStringPtr(str, ctx->id->getText());
+	      // Define the symbol and allocate memory.
+	      // testhere
+
+	      //allocate memory for global type
+
+		if(!inFunc){ //work on global strings!!!!-----------------------------------------------------------------------!
+			module->getOrInsertGlobal(varSymbol->id, CodegenVisitor::i8p);
+			GlobalVariable *g = module->getNamedGlobal(varSymbol->id);
+			g->setAlignment(Align(8));
+			g->setDSOLocal(true);
+			if(ctx->v != nullptr){
+				std::string s = ctx->v->c->s->getText();
+                                s.erase(s.size()-1, 1).erase(0, 1); //remove " " part of string
+                                StringRef str = s;
+				Constant* gPtr= builder->CreateGlobalStringPtr(str, ctx->id->getText(), 0, module);
+				g->setInitializer(gPtr);
+			} else {
+				g->setInitializer(Constant::getNullValue(i8p));
+				
+			}
+			v = g;
+			//	init with global var
+		} else {
+			//in func
+
+			v = builder->CreateAlloca(CodegenVisitor::i8p, 0, varSymbol->id);  
+			if(ctx->v != nullptr){
+				std::string s = ctx->v->c->s->getText();
+				s.erase(s.size()-1, 1).erase(0, 1); //remove " " part of string
+				StringRef str = s;
+				exVal = builder->CreateGlobalStringPtr(str, ctx->id->getText());
+				builder->CreateStore(exVal, v);
+			} else {
+
+			}
+		}
 	}
 
 	varSymbol->val = v;
-	if(inFunc)
-		builder->CreateStore(exVal, v);
 
 
 	return exVal;
@@ -373,6 +384,7 @@ std::any CodegenVisitor::visitProcHeader(WPLParser::ProcHeaderContext *ctx){
 
 	FunctionType *funcType = FunctionType::get(CodegenVisitor::VoidTy, *types,false);
 	Function *func = Function::Create(funcType, Function::ExternalLinkage, sym->id, module);
+	func->setDSOLocal(true);
 
 	sym->func = func;
 	unsigned Idx = 0;
@@ -406,9 +418,10 @@ std::any CodegenVisitor::visitFuncHeader(WPLParser::FuncHeaderContext *ctx){
 	if(sym->baseType == INT || sym->baseType == BOOL){
 		funcType = FunctionType::get(CodegenVisitor::Int32Ty, *types,false);
 	}else{ //string
-	       	funcType = FunctionType::get(CodegenVisitor::i8p, *types, false); 
+		funcType = FunctionType::get(CodegenVisitor::i8p, *types, false); 
 	}
 	Function *func = Function::Create(funcType, Function::ExternalLinkage, sym->id, module);
+	func->setDSOLocal(true);
 	sym->func = func;
 	if(ctx->p != nullptr){
 		std::vector<WPLParser::ParamContext *> p = ctx->p->p;
@@ -440,13 +453,13 @@ std::any CodegenVisitor::visitBlock(WPLParser::BlockContext *ctx){
 
 	//there is no point to implement a basic block here!
 	//scoping is done in semantic analysis
-//	Function *theFunc = builder->GetInsertBlock()->getParent();
-//	BasicBlock *bBlock = BasicBlock::Create(*context, "block", theFunc);
-//
-//	builder->SetInsertPoint(bBlock);
+	//	Function *theFunc = builder->GetInsertBlock()->getParent();
+	//	BasicBlock *bBlock = BasicBlock::Create(*context, "block", theFunc);
+	//
+	//	builder->SetInsertPoint(bBlock);
 	this->visitChildren(ctx);
 
-//	return bBlock;
+	//	return bBlock;
 	return nullptr;
 }
 
@@ -479,7 +492,7 @@ std::any CodegenVisitor::visitFunction(WPLParser::FunctionContext *ctx){
 std::any CodegenVisitor::visitParam(WPLParser::ParamContext *ctx){
 	Symbol *sym = props->getBinding(ctx);
 	Value *val = sym->val;
-	
+
 	Value *alloc = nullptr;
 	if(sym->baseType!= SymBaseType::STR)
 		alloc = builder->CreateAlloca(CodegenVisitor::Int32Ty, 0, sym->id);
@@ -659,8 +672,8 @@ std::any CodegenVisitor::visitExternProcHeader(WPLParser::ExternProcHeaderContex
 
 
 std::any CodegenVisitor::visitFuncCallExpr(WPLParser::FuncCallExprContext *ctx){
-        Symbol *s = props->getBinding(ctx);
-        Function *func = s->func;
+	Symbol *s = props->getBinding(ctx);
+	Function *func = s->func;
 	std::vector<Value *> *args = new std::vector<Value *>;
 	for(WPLParser::ExprContext *a : ctx->args){
 		Value *v = std::any_cast<Value *>(a->accept(this));
@@ -680,7 +693,7 @@ std::any CodegenVisitor::visitLoop(WPLParser::LoopContext *ctx){
 
 	//from old block to start block
 	builder->CreateBr(startBlock);
-	
+
 	//start block (check condition)
 	builder->SetInsertPoint(startBlock);
 
@@ -691,14 +704,14 @@ std::any CodegenVisitor::visitLoop(WPLParser::LoopContext *ctx){
 	builder->CreateCondBr(t, loopBlock, endBlock);
 
 
-	
+
 
 	//loop block
 	builder->SetInsertPoint(loopBlock);
 	ctx->b->accept(this); 
 	builder->CreateBr(startBlock);
 
-	
+
 	//end block (out of loop)
 	builder->SetInsertPoint(endBlock);
 	return nullptr;

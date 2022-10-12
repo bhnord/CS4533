@@ -1,13 +1,10 @@
 #include <stdbool.h>
 #include <stdio.h>
-char* c(char* s);
+char* c(char* kk);
 
-int k=0;
+char* mine = "hello";
 int main(){
-	printf("PRINTING OUTPUT: \n%s\n", c("ss"));
+	printf("PRINTING OUTPUT: \n%s\n", c("no"));
 
 }
 
-int test(){
-	return -55;
-}
