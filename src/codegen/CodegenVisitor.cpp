@@ -580,10 +580,21 @@ std::any CodegenVisitor::visitAssignment(WPLParser::AssignmentContext *ctx){
 	Value *exVal = nullptr;
 	exVal =  std::any_cast<Value *>(ctx->e->accept(this));
 	Symbol *varSymbol = props->getBinding(ctx);  // child variable symbol
+
+
 	if (varSymbol == nullptr) {
 		errors.addCodegenError(ctx->getStart(), "Undefined variable in expression: " + ctx->target->getText());
+	}else if(varSymbol->type == SymType::ARRAY){
+
+		Type* arrType;
+		if(varSymbol->baseType != SymBaseType::STR)
+			arrType = Int32Ty;
+		else
+			arrType = i8p;
+		v = builder->CreateInBoundsGEP(varSymbol->val, {builder->getInt32(0), std::any_cast<Value*>(ctx->arr->ex->accept(this))});
+	}else { //scalar
+		v = varSymbol->val;
 	}
-	v = varSymbol->val;
 	builder->CreateStore(exVal, v);
 
 	return exVal;
@@ -793,3 +804,20 @@ std::any CodegenVisitor::visitSelect(WPLParser::SelectContext *ctx){
 	 }
 	 return nullptr;
  }
+
+
+std::any CodegenVisitor::visitArrayIndex(WPLParser::ArrayIndexContext *ctx){
+	
+	Type* arrType;
+	Symbol *sym = props->getBinding(ctx);
+	if(sym->baseType != SymBaseType::STR)
+		arrType = Int32Ty;
+	else
+		arrType = i8p;
+	Value* val = builder->CreateInBoundsGEP(sym->val, {builder->getInt32(0), std::any_cast<Value*>(ctx->ex->accept(this))});
+	Value* load = builder->CreateLoad(arrType, val);
+	return load;
+}
+
+
+

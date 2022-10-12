@@ -7,9 +7,9 @@ target triple = "x86_64-pc-linux-gnu"
 
 ; Function Attrs: noinline nounwind optnone uwtable
 define dso_local void @func() #0 {
-  %1 = alloca [10 x i32], align 16
-  %2 = getelementptr inbounds [10 x i32], [10 x i32]* %1, i64 0, i64 5
-  store i32 3, i32* %2, align 4
+  %1 = alloca [15 x i32], align 16
+  %2 = getelementptr inbounds [15 x i32], [15 x i32]* %1, i64 0, i64 0
+  store i32 10, i32* %2, align 16
   ret void
 }
 

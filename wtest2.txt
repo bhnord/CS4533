@@ -1,5 +1,7 @@
 extern int func printf(str format, ...);
-str func program(){
-	printf("Hello");
-	return "line1\nline2";
+int func program(){
+	int [5] arr;
+	int k <- 3;
+	k <- arr[3];
+	return 5; 
 }

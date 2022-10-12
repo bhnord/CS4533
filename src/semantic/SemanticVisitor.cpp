@@ -378,7 +378,7 @@ std::any SemanticVisitor::visitArrayIndex(WPLParser::ArrayIndexContext *ctx){
 		errors.addSemanticError(ctx->getStart(), "INT expression expected, but was " + Symbol::getSymBaseTypeName(e));
 	} else {
 		int i = std::stoi(ctx->ex->getText());
-		if(i <= 0){
+		if(i < 0){
 			errors.addSemanticError(ctx->getStart(), "Invalid array length: " + id + ", " + ctx->ex->getText());
 		}
 	}

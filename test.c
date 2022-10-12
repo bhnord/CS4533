@@ -1,5 +1,5 @@
 int k;
 void func(){
-	int arr[10];
-	arr[5] = 3;
+	int arr[15];
+	arr[0] = 10;
 }
