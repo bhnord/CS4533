@@ -1,9 +1,0 @@
-extern int func printf(str format, ...);
-
-str func program(){
-
-str [5] arr;
-	int k <- 3;
-	arr[3]<- "helloworld";
-	return arr[3]; 
-}

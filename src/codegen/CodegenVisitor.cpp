@@ -295,11 +295,33 @@ std::any CodegenVisitor::visitMultExpr(WPLParser::MultExprContext *ctx){
 
 //and expression
 std::any CodegenVisitor::visitAndExpr(WPLParser::AndExprContext *ctx){
-	Value *v = nullptr;
-	Value *lVal = std::any_cast<Value *>(ctx->left->accept(this));
-	Value *rVal = std::any_cast<Value *>(ctx->right->accept(this));
-	v = builder->CreateICmpEQ(lVal, rVal);
-	return v;
+
+        Value *lVal = std::any_cast<Value *>(ctx->left->accept(this));
+        //
+        //
+        //      //blocks and setup
+        Function *theFunc = builder->GetInsertBlock()->getParent();
+        BasicBlock *currBlock = builder->GetInsertBlock();
+        BasicBlock *endBlock = BasicBlock::Create(*context, "cont", theFunc);
+        BasicBlock *rBlock = BasicBlock::Create(*context, "right", theFunc);
+
+        Value *t = builder->CreateICmpEQ(lVal, builder->getInt32(1));
+	//if true, go to rBlock, otherwise go to endblock
+        builder->CreateCondBr(t, rBlock, endBlock);
+        //      
+        //      //rblock
+        builder->SetInsertPoint(rBlock);
+        Value *rVal = std::any_cast<Value *>(ctx->right->accept(this));
+        builder->CreateBr(endBlock);
+        //
+        //      //endblock
+        builder->SetInsertPoint(endBlock);
+        PHINode *PN = builder->CreatePHI(Int32Ty, 2, "ortmp");
+        PN->addIncoming(rVal, rBlock);
+        PN->addIncoming(lVal, currBlock);
+        Value * v = PN;
+        return v;
+
 }
 
 //or expression ---> shortcut out if left is true 

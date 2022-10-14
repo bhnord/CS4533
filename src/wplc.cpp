@@ -104,7 +104,7 @@ int main(int argc, const char* argv[]) {
   tree = parser.compilationUnit();
 
   if(l->hasErrors()){
-	  std::cout << "error in parse: exiting..."<<std::endl;
+	  std::cout << "Error in parse: exiting..."<<std::endl;
 	  return -1;
   }
 
